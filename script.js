@@ -1,4 +1,4 @@
-// Navbar component with navigation for Home and Login.
+// The Navbar has links to "Home" and "Login".
 function Navbar({ onNavigate }) {
   return (
     <nav className="bg-white shadow">
@@ -15,7 +15,14 @@ function Navbar({ onNavigate }) {
           >
             Home
           </a>
-          <a href="/login" className="text-gray-700 hover:text-blue-500 px-3">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("login");
+            }}
+            className="text-gray-700 hover:text-blue-500 px-3"
+          >
             Login
           </a>
         </div>
@@ -24,7 +31,50 @@ function Navbar({ onNavigate }) {
   );
 }
 
-// Highlight key features on the landing page.
+// Footer with links to Privacy Policy, Terms of Service, Contact, etc.
+function Footer({ onNavigate }) {
+  return (
+    <footer className="bg-gray-800 text-white py-4">
+      <div className="container mx-auto text-center">
+        <div className="flex justify-center space-x-4 mb-4">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("privacy");
+            }}
+            className="hover:underline"
+          >
+            Privacy Policy
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("terms");
+            }}
+            className="hover:underline"
+          >
+            Terms of Service
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("contact");
+            }}
+            className="hover:underline"
+          >
+            Contact Us
+          </a>
+        </div>
+        <p>© {new Date().getFullYear()} HeartHeal. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+}
+
+// FeaturesSection on landing page that indicates the purpose of the website.
 function FeaturesSection() {
   return (
     <section className="mt-12">
@@ -52,10 +102,10 @@ function FeaturesSection() {
   );
 }
 
-// Landing Page component with a Get Started button + FeaturesSection.
-function LandingPage() {
+// LandingPage with a "Get Started" button that navigates to "login".
+function LandingPage({ onNavigate }) {
   const handleGetStarted = () => {
-    window.location.href = "/login";
+    onNavigate("login");
   };
 
   return (
@@ -73,13 +123,410 @@ function LandingPage() {
         Get Started
       </button>
 
-      {/* New Features Section */}
       <FeaturesSection />
     </main>
   );
 }
 
-// Privacy Policy 
+// Utility function to validate password strength.
+function validatePassword(password) {
+  // Must be at least 8 characters and include at least one digit and one special character.
+  const regex = /^(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  return regex.test(password);
+}
+
+// LoginPage sends a POST request to /api/auth/login.
+function LoginPage({ onNavigate }) {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Login successful:", data);
+        alert("Login successful!");
+        onNavigate("home");
+      } else {
+        setError(data.message || "Login failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An error occurred during login. Please try again.");
+    }
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-8 max-w-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
+        <div className="mb-4">
+          <label htmlFor="loginEmail" className="block font-semibold mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            id="loginEmail"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="loginPassword" className="block font-semibold mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            id="loginPassword"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 w-full"
+        >
+          Login
+        </button>
+      </form>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => onNavigate("forgot")}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          Forgot password?
+        </button>
+        <button
+          onClick={() => onNavigate("signup")}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          New user? Sign up
+        </button>
+      </div>
+    </main>
+  );
+}
+
+// SignupPage sends a POST request to /api/auth/signup.
+function SignupPage({ onNavigate }) {
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [message, setMessage] = React.useState("");
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    if (!validatePassword(password)) {
+      setError(
+        "Password must be at least 8 characters long, include a number and a special character."
+      );
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("User registered successfully!");
+      } else {
+        if (data.message && data.message.toLowerCase().includes("exists")) {
+          setMessage("User already registered!");
+        } else {
+          setError(data.message || "Signup failed. Please try again.");
+        }
+      }
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("An error occurred during signup. Please try again.");
+    }
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-8 max-w-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+      {message && <div className="text-green-500 mb-4">{message}</div>}
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      <form
+        onSubmit={handleSignup}
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
+        <div className="mb-4">
+          <label htmlFor="signupName" className="block font-semibold mb-1">
+            Name
+          </label>
+          <input
+            type="text"
+            id="signupName"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="signupEmail" className="block font-semibold mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            id="signupEmail"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="signupPassword" className="block font-semibold mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            id="signupPassword"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter a strong password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 w-full"
+        >
+          Sign Up
+        </button>
+      </form>
+      <div className="text-center mt-4">
+        <button
+          onClick={() => onNavigate("login")}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          Already have an account? Log in
+        </button>
+      </div>
+    </main>
+  );
+}
+
+// ForgotPasswordPage sends a POST request to /api/auth/forgot-password.
+function ForgotPasswordPage({ onNavigate }) {
+  const [email, setEmail] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [message, setMessage] = React.useState("");
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("A password reset link has been sent to your email.");
+      } else {
+        setError(
+          data.message || "Failed to send reset link. Please try again."
+        );
+      }
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      setError("An error occurred. Please try again.");
+    }
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-8 max-w-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Forgot Password</h2>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {message && <div className="text-green-500 mb-4">{message}</div>}
+      <form
+        onSubmit={handleForgotPassword}
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
+        <div className="mb-4">
+          <label htmlFor="forgotEmail" className="block font-semibold mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            id="forgotEmail"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your email to receive a reset link"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 w-full"
+        >
+          Send Reset Link
+        </button>
+      </form>
+      <div className="text-center mt-4">
+        <button
+          onClick={() => onNavigate("login")}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          Remembered your password? Log in
+        </button>
+      </div>
+    </main>
+  );
+}
+
+// ResetPasswordPage reads the token from the URL query string (if provided) so that the user does not need to enter it manually.
+function ResetPasswordPage({ onNavigate }) {
+  // Read token from the query parameter, if present.
+  const queryParams = new URLSearchParams(window.location.search);
+  const tokenFromURL = queryParams.get("token");
+  const [token, setToken] = React.useState(tokenFromURL || "");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+    if (!validatePassword(newPassword)) {
+      setError(
+        "Password must be at least 8 characters long, include a number and a special character."
+      );
+      return;
+    }
+    if (!token) {
+      setError("Reset token is missing.");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/reset-password/${token}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: newPassword }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        alert(
+          "Password reset successful! Please log in with your new password."
+        );
+        onNavigate("login");
+      } else {
+        setError(data.message || "Password reset failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Reset password error:", err);
+      setError("An error occurred. Please try again.");
+    }
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-8 max-w-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Reset Password</h2>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      <form
+        onSubmit={handleResetPassword}
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
+        {/* Only show token input if not provided in the URL */}
+        {!token && (
+          <div className="mb-4">
+            <label htmlFor="resetToken" className="block font-semibold mb-1">
+              Reset Token
+            </label>
+            <input
+              type="text"
+              id="resetToken"
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="Enter the reset token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              required
+            />
+          </div>
+        )}
+        <div className="mb-4">
+          <label htmlFor="newPass" className="block font-semibold mb-1">
+            New Password
+          </label>
+          <input
+            type="password"
+            id="newPass"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Enter your new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="confirmPass" className="block font-semibold mb-1">
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            id="confirmPass"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Confirm your new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 w-full"
+        >
+          Reset Password
+        </button>
+      </form>
+    </main>
+  );
+}
+
+// placeholders (Privacy, Terms, Contact).
+// Privacy Policy
 function PrivacyPolicy() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -118,7 +565,7 @@ function PrivacyPolicy() {
   );
 }
 
-// Terms of Service 
+// Terms of Service
 function TermsOfService() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -176,57 +623,25 @@ function ContactUs() {
   );
 }
 
-// Footer component with quick links 
-function Footer({ onNavigate }) {
-  return (
-    <footer className="bg-gray-800 text-white py-4">
-      <div className="container mx-auto text-center">
-        <div className="flex justify-center space-x-4 mb-4">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("privacy");
-            }}
-            className="hover:underline"
-          >
-            Privacy Policy
-          </a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("terms");
-            }}
-            className="hover:underline"
-          >
-            Terms of Service
-          </a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("contact");
-            }}
-            className="hover:underline"
-          >
-            Contact Us
-          </a>
-        </div>
-        <p>© {new Date().getFullYear()} HeartHeal. All rights reserved.</p>
-      </div>
-    </footer>
-  );
-}
-
-// Main App component 
+// The App holds the current page in state. We switch pages via onNavigate().
 function App() {
-  const [page, setPage] = React.useState("home");
+  const queryParams = new URLSearchParams(window.location.search);
+  const pageParam = queryParams.get("page") || "home";
+  const [page, setPage] = React.useState(pageParam);
 
+  // Decide which component to render based on current page
   const renderPage = () => {
     switch (page) {
       case "home":
-        return <LandingPage />;
+        return <LandingPage onNavigate={setPage} />;
+      case "login":
+        return <LoginPage onNavigate={setPage} />;
+      case "signup":
+        return <SignupPage onNavigate={setPage} />;
+      case "forgot":
+        return <ForgotPasswordPage onNavigate={setPage} />;
+      case "reset":
+        return <ResetPasswordPage onNavigate={setPage} />;
       case "privacy":
         return <PrivacyPolicy />;
       case "terms":
@@ -234,7 +649,7 @@ function App() {
       case "contact":
         return <ContactUs />;
       default:
-        return <LandingPage />;
+        return <LandingPage onNavigate={setPage} />;
     }
   };
 
@@ -247,5 +662,5 @@ function App() {
   );
 }
 
-// Render the App component to the root div.
+// Render the App component to the root div
 ReactDOM.render(<App />, document.getElementById("root"));
