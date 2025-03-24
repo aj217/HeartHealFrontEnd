@@ -31,6 +31,69 @@ function Navbar({ onNavigate }) {
   );
 }
 
+// UserNavbar for authenticated users
+function UserNavbar({ onNavigate, onLogout }) {
+  return (
+    <nav className="bg-blue-600 shadow">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="text-xl font-bold text-white">HeartHeal Dashboard</div>
+        <div>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("dashboard");
+            }}
+            className="text-white hover:text-gray-200 px-3"
+          >
+            Dashboard
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("journal");
+            }}
+            className="text-white hover:text-gray-200 px-3"
+          >
+            Journal
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("musicquote");
+            }}
+            className="text-white hover:text-gray-200 px-3"
+          >
+            Music &amp; Quotes
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("profile");
+            }}
+            className="text-white hover:text-gray-200 px-3"
+          >
+            Profile
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onLogout();
+            }}
+            className="text-white hover:text-gray-200 px-3"
+          >
+            Logout
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 // Footer with links to Privacy Policy, Terms of Service, Contact, etc.
 function Footer({ onNavigate }) {
   return (
@@ -136,7 +199,7 @@ function validatePassword(password) {
 }
 
 // LoginPage sends a POST request to /api/auth/login.
-function LoginPage({ onNavigate }) {
+function LoginPage({ onNavigate, onAuthSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
@@ -154,7 +217,8 @@ function LoginPage({ onNavigate }) {
       if (response.ok) {
         console.log("Login successful:", data);
         alert("Login successful!");
-        onNavigate("home");
+        onAuthSuccess(); // Mark user as authenticated
+        onNavigate("dashboard"); // Redirect to dashboard or another secure page
       } else {
         setError(data.message || "Login failed. Please try again.");
       }
@@ -565,6 +629,51 @@ function PrivacyPolicy() {
   );
 }
 
+// Dashboardpage
+function DashboardPage() {
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-4">Dashboard</h2>
+      <p>
+        Welcome to your dashboard! Here you can see an overview of your
+        activity.
+      </p>
+    </main>
+  );
+}
+
+// JournalPage
+function JournalPage() {
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-4">Journal</h2>
+      <p>
+        This is your journal page. Record your thoughts and track your progress.
+      </p>
+    </main>
+  );
+}
+
+// MusicQuotesPage
+function MusicQuotePage() {
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-4">Music &amp; Quotes</h2>
+      <p>Enjoy calming music and read inspiring daily quotes.</p>
+    </main>
+  );
+}
+
+// ProfilePage
+function ProfilePage() {
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-4">User Profile</h2>
+      <p>View and update your profile settings here.</p>
+    </main>
+  );
+}
+
 // Terms of Service
 function TermsOfService() {
   return (
@@ -623,25 +732,44 @@ function ContactUs() {
   );
 }
 
-// The App holds the current page in state. We switch pages via onNavigate().
+// The App holds the current page in state. It switch pages via onNavigate().
 function App() {
   const queryParams = new URLSearchParams(window.location.search);
-  const pageParam = queryParams.get("page") || "home";
-  const [page, setPage] = React.useState(pageParam);
+  const initialPage = queryParams.get("page") || "home";
+  const [page, setPage] = React.useState(initialPage);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
-  // Decide which component to render based on current page
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPage("login");
+  };
+
   const renderPage = () => {
     switch (page) {
       case "home":
         return <LandingPage onNavigate={setPage} />;
       case "login":
-        return <LoginPage onNavigate={setPage} />;
+        return (
+          <LoginPage onNavigate={setPage} onAuthSuccess={handleAuthSuccess} />
+        );
       case "signup":
         return <SignupPage onNavigate={setPage} />;
       case "forgot":
         return <ForgotPasswordPage onNavigate={setPage} />;
       case "reset":
         return <ResetPasswordPage onNavigate={setPage} />;
+      case "dashboard":
+        return <DashboardPage />;
+      case "journal":
+        return <JournalPage />;
+      case "musicquote":
+        return <MusicQuotePage />;
+      case "profile":
+        return <ProfilePage />;
       case "privacy":
         return <PrivacyPolicy />;
       case "terms":
@@ -655,9 +783,18 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar onNavigate={setPage} />
+      {isAuthenticated ? (
+        <UserNavbar onNavigate={setPage} onLogout={handleLogout} />
+      ) : (
+        <Navbar onNavigate={setPage} />
+      )}
+
       <div className="flex-grow">{renderPage()}</div>
-      <Footer onNavigate={setPage} />
+
+      {/* Hide footer on these authenticated pages */}
+      {!["dashboard", "journal", "musicquote", "profile"].includes(page) && (
+        <Footer onNavigate={setPage} />
+      )}
     </div>
   );
 }
