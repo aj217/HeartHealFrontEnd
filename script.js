@@ -589,46 +589,6 @@ function ResetPasswordPage({ onNavigate }) {
   );
 }
 
-// placeholders (Privacy, Terms, Contact).
-// Privacy Policy
-function PrivacyPolicy() {
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="bg-white p-6 rounded-lg shadow-md text-left">
-        <h2 className="text-3xl font-bold mb-4">Privacy Policy</h2>
-        <p className="mb-4">
-          At HeartHeal, we are committed to protecting your privacy. This
-          Privacy Policy outlines how we collect, use, and safeguard your
-          personal information when you use our website or services. By using
-          HeartHeal, you agree to the practices described in this policy. If you
-          do not agree with any part, please discontinue use of our website.
-        </p>
-        <p className="mb-4">
-          We collect personal information that you provide voluntarily, such as
-          your name, email address, and any other details you choose to share.
-          We may also gather usage data (e.g., pages visited, time spent) to
-          analyze site performance and enhance user experience. Cookies or
-          similar technologies may be used to remember your preferences and
-          improve site functionality.
-        </p>
-        <p className="mb-4">
-          Your information is used to personalize your experience, send relevant
-          updates, analyze trends, and improve our services. We do not sell or
-          share your data with third parties except as required by law. While we
-          implement industry-standard security measures to protect your data,
-          please note that no method of transmission or storage is completely
-          secure.
-        </p>
-        <p className="mb-4">
-          We may update this Privacy Policy from time to time. Any changes will
-          be posted on this page. By continuing to use HeartHeal after any
-          modifications, you acknowledge and accept those changes.
-        </p>
-      </div>
-    </main>
-  );
-}
-
 // Dashboardpage
 function DashboardPage() {
   return (
@@ -670,6 +630,46 @@ function ProfilePage() {
     <main className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-4">User Profile</h2>
       <p>View and update your profile settings here.</p>
+    </main>
+  );
+}
+
+// placeholders (Privacy, Terms, Contact).
+// Privacy Policy
+function PrivacyPolicy() {
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <div className="bg-white p-6 rounded-lg shadow-md text-left">
+        <h2 className="text-3xl font-bold mb-4">Privacy Policy</h2>
+        <p className="mb-4">
+          At HeartHeal, we are committed to protecting your privacy. This
+          Privacy Policy outlines how we collect, use, and safeguard your
+          personal information when you use our website or services. By using
+          HeartHeal, you agree to the practices described in this policy. If you
+          do not agree with any part, please discontinue use of our website.
+        </p>
+        <p className="mb-4">
+          We collect personal information that you provide voluntarily, such as
+          your name, email address, and any other details you choose to share.
+          We may also gather usage data (e.g., pages visited, time spent) to
+          analyze site performance and enhance user experience. Cookies or
+          similar technologies may be used to remember your preferences and
+          improve site functionality.
+        </p>
+        <p className="mb-4">
+          Your information is used to personalize your experience, send relevant
+          updates, analyze trends, and improve our services. We do not sell or
+          share your data with third parties except as required by law. While we
+          implement industry-standard security measures to protect your data,
+          please note that no method of transmission or storage is completely
+          secure.
+        </p>
+        <p className="mb-4">
+          We may update this Privacy Policy from time to time. Any changes will
+          be posted on this page. By continuing to use HeartHeal after any
+          modifications, you acknowledge and accept those changes.
+        </p>
+      </div>
     </main>
   );
 }
