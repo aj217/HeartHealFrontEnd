@@ -1,4 +1,4 @@
-// The Navbar has links to "Home" and "Login".
+// Navbar Component
 function Navbar({ onNavigate }) {
   return (
     <nav className="bg-white shadow">
@@ -31,8 +31,15 @@ function Navbar({ onNavigate }) {
   );
 }
 
-// UserNavbar for authenticated users
+// UserNavbar Component
 function UserNavbar({ onNavigate, onLogout }) {
+  const handleLogoutClick = () => {
+    const confirmed = window.confirm("Are you sure you want to exit?");
+    if (confirmed) {
+      onLogout();
+    }
+  };
+
   return (
     <nav className="bg-blue-600 shadow">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -82,7 +89,7 @@ function UserNavbar({ onNavigate, onLogout }) {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              onLogout();
+              handleLogoutClick();
             }}
             className="text-white hover:text-gray-200 px-3"
           >
@@ -94,78 +101,7 @@ function UserNavbar({ onNavigate, onLogout }) {
   );
 }
 
-// Footer with links to Privacy Policy, Terms of Service, Contact, etc.
-function Footer({ onNavigate }) {
-  return (
-    <footer className="bg-gray-800 text-white py-4">
-      <div className="container mx-auto text-center">
-        <div className="flex justify-center space-x-4 mb-4">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("privacy");
-            }}
-            className="hover:underline"
-          >
-            Privacy Policy
-          </a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("terms");
-            }}
-            className="hover:underline"
-          >
-            Terms of Service
-          </a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigate("contact");
-            }}
-            className="hover:underline"
-          >
-            Contact Us
-          </a>
-        </div>
-        <p>© {new Date().getFullYear()} HeartHeal. All rights reserved.</p>
-      </div>
-    </footer>
-  );
-}
-
-// FeaturesSection on landing page that indicates the purpose of the website.
-function FeaturesSection() {
-  return (
-    <section className="mt-12">
-      <h2 className="text-2xl font-semibold mb-6">Key Features</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Feature 1 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Daily Journaling</h3>
-          <p>Express your thoughts and track your emotional journey</p>
-        </div>
-
-        {/* Feature 2 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Calming Music</h3>
-          <p>Discover peaceful melodies to soothe your mind</p>
-        </div>
-
-        {/* Feature 3 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Daily Quotes</h3>
-          <p>Find inspiration in a variety of curated quotes</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// LandingPage with a "Get Started" button that navigates to "login".
+// LandingPage Component
 function LandingPage({ onNavigate }) {
   const handleGetStarted = () => {
     onNavigate("login");
@@ -185,20 +121,44 @@ function LandingPage({ onNavigate }) {
       >
         Get Started
       </button>
-
       <FeaturesSection />
     </main>
   );
 }
 
-// Utility function to validate password strength.
+// FeaturesSection Component
+function FeaturesSection() {
+  return (
+    <section className="mt-12">
+      <h2 className="text-2xl font-semibold mb-6">Key Features</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Feature 1 */}
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-bold mb-2">Daily Journaling</h3>
+          <p>Express your thoughts and track your emotional journey</p>
+        </div>
+        {/* Feature 2 */}
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-bold mb-2">Calming Music</h3>
+          <p>Discover peaceful melodies to soothe your mind</p>
+        </div>
+        {/* Feature 3 */}
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-bold mb-2">Daily Quotes</h3>
+          <p>Find inspiration in a variety of curated quotes</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Utility: Validate Password
 function validatePassword(password) {
-  // Must be at least 8 characters and include at least one digit and one special character.
   const regex = /^(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return regex.test(password);
 }
 
-// LoginPage sends a POST request to /api/auth/login.
+// LoginPage Component
 function LoginPage({ onNavigate, onAuthSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -216,9 +176,10 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
       const data = await response.json();
       if (response.ok) {
         console.log("Login successful:", data);
+        localStorage.setItem("token", data.token);
         alert("Login successful!");
-        onAuthSuccess(); // Mark user as authenticated
-        onNavigate("dashboard"); // Redirect to dashboard or another secure page
+        onAuthSuccess();
+        onNavigate("dashboard");
       } else {
         setError(data.message || "Login failed. Please try again.");
       }
@@ -289,7 +250,7 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
   );
 }
 
-// SignupPage sends a POST request to /api/auth/signup.
+// SignupPage Component
 function SignupPage({ onNavigate }) {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -399,7 +360,7 @@ function SignupPage({ onNavigate }) {
   );
 }
 
-// ForgotPasswordPage sends a POST request to /api/auth/forgot-password.
+// ForgotPasswordPage Component
 function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState("");
@@ -474,9 +435,8 @@ function ForgotPasswordPage({ onNavigate }) {
   );
 }
 
-// ResetPasswordPage reads the token from the URL query string (if provided) so that the user does not need to enter it manually.
+// ResetPasswordPage Component
 function ResetPasswordPage({ onNavigate }) {
-  // Read token from the query parameter, if present.
   const queryParams = new URLSearchParams(window.location.search);
   const tokenFromURL = queryParams.get("token");
   const [token, setToken] = React.useState(tokenFromURL || "");
@@ -533,7 +493,6 @@ function ResetPasswordPage({ onNavigate }) {
         onSubmit={handleResetPassword}
         className="bg-white p-6 rounded-lg shadow-md"
       >
-        {/* Only show token input if not provided in the URL */}
         {!token && (
           <div className="mb-4">
             <label htmlFor="resetToken" className="block font-semibold mb-1">
@@ -589,7 +548,7 @@ function ResetPasswordPage({ onNavigate }) {
   );
 }
 
-// Dashboardpage
+// DashboardPage Component
 function DashboardPage() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -602,7 +561,7 @@ function DashboardPage() {
   );
 }
 
-// JournalPage
+// JournalPage Component
 function JournalPage() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -614,7 +573,7 @@ function JournalPage() {
   );
 }
 
-// MusicQuotesPage
+// MusicQuotePage Component
 function MusicQuotePage() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -624,18 +583,368 @@ function MusicQuotePage() {
   );
 }
 
-// ProfilePage
-function ProfilePage() {
+// UserProfilePage Component (Profile Display)
+function UserProfilePage({ onNavigate }) {
+  const [profile, setProfile] = React.useState(null);
+  const [error, setError] = React.useState("");
+  const [recentJournals, setRecentJournals] = React.useState([]);
+  const [achievements, setAchievements] = React.useState([]);
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    // Fetch the user's basic profile
+    async function fetchProfile() {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/profile", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Profile fetch failed with status ${response.status}`
+          );
+        }
+        const data = await response.json();
+        setProfile(data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError(err.message);
+      }
+    }
+
+    // Fetch recent journals (for example, last 5)
+    async function fetchRecentJournals() {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/journal?limit=5", // Adjust limit as desired
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(
+            `Journal fetch failed with status ${response.status}`
+          );
+        }
+        const data = await response.json();
+        // data should have { journals: [...], totalEntries, ... } 
+        setRecentJournals(data.journals || []);
+      } catch (err) {
+        console.error("Error fetching journals:", err);
+      }
+    }
+
+    // Fetch achievements
+    async function fetchAchievements() {
+      try {
+        const response = await fetch("http://localhost:5000/api/achievements", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Achievements fetch failed with status ${response.status}`
+          );
+        }
+        const data = await response.json();
+        // data should be an array of achievements
+        setAchievements(data || []);
+      } catch (err) {
+        console.error("Error fetching achievements:", err);
+      }
+    }
+
+    if (token) {
+      fetchProfile();
+      fetchRecentJournals();
+      fetchAchievements();
+    }
+  }, [token]);
+
   return (
     <main className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-4">User Profile</h2>
-      <p>View and update your profile settings here.</p>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {profile ? (
+        <>
+          {/* Personal Information */}
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
+            <p>
+              <strong>Name:</strong> {profile.name}
+            </p>
+            <p>
+              <strong>Email:</strong> {profile.email}
+            </p>
+            {profile.profilePicture ? (
+              <img
+                src={`http://localhost:5000/${profile.profilePicture}`}
+                alt="Profile"
+                className="w-32 h-32 rounded-full mt-2"
+              />
+            ) : (
+              <p>No profile picture set.</p>
+            )}
+            <p>
+              <strong>Bio:</strong> {profile.bio}
+            </p>
+          </div>
+
+          {/* Button to go to Update Profile Page */}
+          <button
+            onClick={() => onNavigate("updateProfile")}
+            className="bg-blue-500 text-white px-6 py-2 rounded"
+          >
+            Update Profile
+          </button>
+
+          {/* Activity Overview */}
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">Activity Overview</h3>
+
+            {/* Recent Journal Entries */}
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold mb-1">
+                Recent Journal Entries
+              </h4>
+              {recentJournals.length > 0 ? (
+                <ul className="list-disc list-inside">
+                  {recentJournals.map((entry) => (
+                    <li key={entry._id} className="mb-2">
+                      <p className="font-medium">
+                        Date: {new Date(entry.createdAt).toLocaleDateString()}
+                      </p>
+                      <p>{entry.text}</p>
+                      {entry.mood && <p>Mood: {entry.mood}</p>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No recent journal entries.</p>
+              )}
+            </div>
+
+            {/* Achievements */}
+            <div>
+              <h4 className="text-lg font-semibold mb-1">Your Achievements</h4>
+              {achievements.length > 0 ? (
+                <ul className="list-disc list-inside">
+                  {achievements.map((ach) => (
+                    <li key={ach.name} className="mb-2">
+                      <strong>{ach.name}</strong> - {ach.description}
+                      {ach.earned && (
+                        <span className="ml-2 text-green-600">(Earned!)</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No achievements earned yet.</p>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <p>Loading profile data...</p>
+      )}
     </main>
   );
 }
 
-// placeholders (Privacy, Terms, Contact).
-// Privacy Policy
+// UpdateProfilePage Component (Profile Update Form)
+function UpdateProfilePage({ onNavigate }) {
+  const [formData, setFormData] = React.useState({ name: "", bio: "" });
+  const [profilePicFile, setProfilePicFile] = React.useState(null);
+  const [previewPic, setPreviewPic] = React.useState(null);
+  const [error, setError] = React.useState("");
+  const [message, setMessage] = React.useState("");
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/profile", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setFormData({ name: data.name || "", bio: data.bio || "" });
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile data");
+      }
+    }
+    fetchProfile();
+  }, [token]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setProfilePicFile(file);
+    if (file) {
+      setPreviewPic(URL.createObjectURL(file));
+    } else {
+      setPreviewPic(null);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+
+    const updateData = new FormData();
+    updateData.append("name", formData.name);
+    updateData.append("bio", formData.bio);
+    if (profilePicFile) {
+      updateData.append("profilePicture", profilePicFile);
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/update", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: updateData,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("Profile updated successfully!");
+        onNavigate("profile");
+      } else {
+        setError(data.message || "Update failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      setError("An error occurred while updating profile.");
+    }
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-4">Update Profile</h2>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {message && <div className="text-green-500 mb-4">{message}</div>}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
+        <div className="mb-4">
+          <label htmlFor="name" className="block font-semibold mb-1">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="bio" className="block font-semibold mb-1">
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="profilePicture" className="block font-semibold mb-1">
+            Upload Profile Picture
+          </label>
+          <input
+            type="file"
+            id="profilePicture"
+            onChange={handleFileChange}
+            className="w-full"
+            accept="image/*"
+          />
+          {previewPic && (
+            <img
+              src={previewPic}
+              alt="Preview"
+              className="w-32 h-32 rounded-full mt-2"
+            />
+          )}
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+        >
+          Update Profile
+        </button>
+      </form>
+      <button
+        onClick={() => onNavigate("profile")}
+        className="mt-4 text-blue-500 hover:underline"
+      >
+        Cancel
+      </button>
+    </main>
+  );
+}
+
+// Footer Component
+function Footer({ onNavigate }) {
+  return (
+    <footer className="bg-gray-800 text-white py-4">
+      <div className="container mx-auto text-center">
+        <div className="flex justify-center space-x-4 mb-4">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("privacy");
+            }}
+            className="hover:underline"
+          >
+            Privacy Policy
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("terms");
+            }}
+            className="hover:underline"
+          >
+            Terms of Service
+          </a>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("contact");
+            }}
+            className="hover:underline"
+          >
+            Contact Us
+          </a>
+        </div>
+        <p>© {new Date().getFullYear()} HeartHeal. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+}
+
+// PrivacyPolicy Component
 function PrivacyPolicy() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -674,7 +983,7 @@ function PrivacyPolicy() {
   );
 }
 
-// Terms of Service
+// TermsOfService Component
 function TermsOfService() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -710,7 +1019,7 @@ function TermsOfService() {
   );
 }
 
-// Contact Us component for user inquiries.
+// ContactUs Component
 function ContactUs() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -732,7 +1041,27 @@ function ContactUs() {
   );
 }
 
-// The App holds the current page in state. It switch pages via onNavigate().
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+
+// App Component
 function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const initialPage = queryParams.get("page") || "home";
@@ -769,7 +1098,9 @@ function App() {
       case "musicquote":
         return <MusicQuotePage />;
       case "profile":
-        return <ProfilePage />;
+        return <UserProfilePage onNavigate={setPage} />;
+      case "updateProfile":
+        return <UpdateProfilePage onNavigate={setPage} />;
       case "privacy":
         return <PrivacyPolicy />;
       case "terms":
@@ -782,22 +1113,19 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {isAuthenticated ? (
-        <UserNavbar onNavigate={setPage} onLogout={handleLogout} />
-      ) : (
-        <Navbar onNavigate={setPage} />
-      )}
-
-      <div className="flex-grow">{renderPage()}</div>
-
-      {/* Hide footer on these authenticated pages */}
-      {!["dashboard", "journal", "musicquote", "profile"].includes(page) && (
-        <Footer onNavigate={setPage} />
-      )}
-    </div>
+    <ErrorBoundary>
+      <div className="flex flex-col min-h-screen">
+        {isAuthenticated ? (
+          <UserNavbar onNavigate={setPage} onLogout={handleLogout} />
+        ) : (
+          <Navbar onNavigate={setPage} />
+        )}
+        <div className="flex-grow">{renderPage()}</div>
+        {page === "home" && <Footer onNavigate={setPage} />}
+      </div>
+    </ErrorBoundary>
   );
 }
 
-// Render the App component to the root div
+// Render the App
 ReactDOM.render(<App />, document.getElementById("root"));
