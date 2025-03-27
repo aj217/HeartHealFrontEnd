@@ -877,7 +877,6 @@ function MusicQuotePage() {
 function UserProfilePage({ onNavigate }) {
   const [profile, setProfile] = React.useState(null);
   const [error, setError] = React.useState("");
-  const [recentJournals, setRecentJournals] = React.useState([]);
   const [achievements, setAchievements] = React.useState([]);
   const [favoriteQuotes, setFavoriteQuotes] = React.useState([]);
   const token = localStorage.getItem("token");
@@ -903,28 +902,6 @@ function UserProfilePage({ onNavigate }) {
       } catch (err) {
         console.error("Error fetching profile:", err);
         setError(err.message);
-      }
-    }
-
-    async function fetchRecentJournals() {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/journal?limit=5",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error(
-            `Journal fetch failed with status ${response.status}`
-          );
-        }
-        const data = await response.json();
-        setRecentJournals(data.journals || []);
-      } catch (err) {
-        console.error("Error fetching journals:", err);
       }
     }
 
@@ -971,7 +948,6 @@ function UserProfilePage({ onNavigate }) {
 
     if (token) {
       fetchProfile();
-      fetchRecentJournals();
       fetchAchievements();
       fetchFavoriteQuotes(selectedMood);
     }
@@ -1058,28 +1034,6 @@ function UserProfilePage({ onNavigate }) {
           >
             Update Profile
           </button>
-
-          {/* Journals */}
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-2">
-              📝 Recent Journal Entries
-            </h3>
-            {recentJournals.length > 0 ? (
-              <ul className="list-disc list-inside">
-                {recentJournals.map((entry) => (
-                  <li key={entry._id} className="mb-2">
-                    <p className="font-medium">
-                      Date: {new Date(entry.createdAt).toLocaleDateString()}
-                    </p>
-                    <p>{entry.text}</p>
-                    {entry.mood && <p>Mood: {entry.mood}</p>}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No recent journal entries.</p>
-            )}
-          </div>
 
           {/* Achievements */}
           <div className="mt-8">
