@@ -575,10 +575,300 @@ function JournalPage() {
 
 // MusicQuotePage Component
 function MusicQuotePage() {
+  const [mood, setMood] = React.useState("happy");
+  const [tracks, setTracks] = React.useState([]);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchResults, setSearchResults] = React.useState([]);
+  const [sound, setSound] = React.useState(null);
+  const [currentPreview, setCurrentPreview] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const [quote, setQuote] = React.useState("");
+  const [quoteAuthor, setQuoteAuthor] = React.useState("");
+  const [quoteLoading, setQuoteLoading] = React.useState(false);
+  const [quoteSaved, setQuoteSaved] = React.useState(false);
+  const [quoteSaveError, setQuoteSaveError] = React.useState("");
+
+  const moods = ["happy", "calm", "sad", "energetic"];
+
+  const fetchMusic = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/music/spotify?mood=${mood}&limit=10`
+      );
+      if (!res.ok) throw new Error("Failed to fetch music!");
+      const data = await res.json();
+      setTracks(data.results || []);
+      setSearchResults([]);
+    } catch (err) {
+      console.error("Error fetching mood-based music:", err);
+      setError("Could not load music. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchQuote = async () => {
+    setQuoteLoading(true);
+    setQuoteSaved(false);
+    setQuoteSaveError("");
+    try {
+      const res = await fetch("http://localhost:5000/api/quotes/random");
+      if (!res.ok) throw new Error("Quote fetch failed");
+      const data = await res.json();
+      setQuote(data.quote);
+      setQuoteAuthor(data.author);
+    } catch (err) {
+      console.error("Error fetching quote:", err);
+      setQuote("Failed to load quote.");
+      setQuoteAuthor("Try again");
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  const saveQuoteToFavorites = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/quotes/favorite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text: quote,
+          author: quoteAuthor,
+          mood: mood,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setQuoteSaved(true);
+      } else {
+        setQuoteSaveError(data.message || "Failed to save quote.");
+      }
+    } catch (err) {
+      console.error("Error saving quote:", err);
+      setQuoteSaveError("Something went wrong. Try again.");
+    }
+  };
+
+  const playPreview = (previewUrl) => {
+    if (sound) {
+      sound.stop();
+      setSound(null);
+      setCurrentPreview(null);
+    }
+
+    if (previewUrl && currentPreview !== previewUrl) {
+      const newSound = new Howl({
+        src: [previewUrl],
+        html5: true,
+        onend: () => setCurrentPreview(null),
+      });
+      newSound.play();
+      setSound(newSound);
+      setCurrentPreview(previewUrl);
+    }
+  };
+
+  const stopPlayback = () => {
+    if (sound) {
+      sound.stop();
+      setSound(null);
+      setCurrentPreview(null);
+    }
+  };
+
+  const handleSearch = async () => {
+    const token = localStorage.getItem("token");
+    if (!searchTerm.trim() || !token) return;
+
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/music/search?query=${encodeURIComponent(
+          searchTerm
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      setSearchResults(data.results || []);
+      setTracks([]);
+    } catch (err) {
+      console.error("Search error:", err);
+      setError("Search failed. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cleanup for unmounted component
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchMusic();
+    fetchQuote();
+    return () => {
+      isMounted = false;
+      if (sound) sound.stop();
+    };
+  }, []);
+
   return (
     <main className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-4">Music &amp; Quotes</h2>
-      <p>Enjoy calming music and read inspiring daily quotes.</p>
+      <h2 className="text-3xl font-bold mb-6">🎵 Music & Inspiration</h2>
+
+      {/* Search Bar */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Search any music (e.g. Lofi, Taylor Swift)"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border px-4 py-2 rounded w-full md:w-2/3"
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600"
+        >
+          🔍 Search
+        </button>
+      </div>
+
+      {/* Mood Selector */}
+      <div className="flex items-center mb-6 space-x-4">
+        <label className="text-lg font-semibold">Mood:</label>
+        <select
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          className="border px-3 py-2 rounded"
+        >
+          {moods.map((m) => (
+            <option key={m} value={m}>
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={fetchMusic}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Search
+        </button>
+      </div>
+
+      {/* Quote Section */}
+      <section className="bg-purple-50 border border-purple-300 rounded-lg shadow p-6 mb-8">
+        <h3 className="text-xl font-bold text-purple-800 mb-4">
+          💡 Daily Inspiration
+        </h3>
+        {quoteLoading ? (
+          <p className="text-gray-500 italic">Loading inspirational words...</p>
+        ) : (
+          <>
+            <p className="text-lg italic text-gray-800 mb-2">"{quote}"</p>
+            <p className="text-right font-semibold text-purple-700">
+              — {quoteAuthor}
+            </p>
+            {quoteSaved && (
+              <p className="text-green-600 mt-2 font-semibold">
+                💖 Saved to favorites!
+              </p>
+            )}
+            {quoteSaveError && (
+              <p className="text-red-500 mt-2">{quoteSaveError}</p>
+            )}
+          </>
+        )}
+        <div className="flex justify-center space-x-4 mt-4">
+          <button
+            onClick={fetchQuote}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
+          >
+            🔁 Refresh Quote
+          </button>
+          <button
+            onClick={saveQuoteToFavorites}
+            className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded"
+          >
+            💖 Save to Favorites
+          </button>
+        </div>
+      </section>
+
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {isLoading && <p className="text-gray-500 mb-4">Loading music...</p>}
+
+      {/* Music Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {(searchResults.length > 0 ? searchResults : tracks).map(
+          (track, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow p-4 text-center"
+            >
+              <img
+                src={track.image}
+                alt={track.name}
+                className="w-full h-48 object-cover rounded mb-4"
+              />
+              <h3 className="text-lg font-bold">{track.name}</h3>
+              <p className="text-gray-600">
+                {Array.isArray(track.artists)
+                  ? track.artists.join(", ")
+                  : track.artist || "Unknown Artist"}
+              </p>
+
+              {currentPreview === track.preview_url && (
+                <p className="text-green-600 text-sm mt-1">🎧 Now Playing</p>
+              )}
+
+              <div className="mt-4 space-x-2">
+                {track.preview_url ? (
+                  <button
+                    onClick={() =>
+                      currentPreview === track.preview_url
+                        ? stopPlayback()
+                        : playPreview(track.preview_url)
+                    }
+                    className={`px-4 py-2 rounded text-white ${
+                      currentPreview === track.preview_url
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
+                  >
+                    {currentPreview === track.preview_url
+                      ? "Stop"
+                      : "Play Preview"}
+                  </button>
+                ) : (
+                  <span className="text-sm text-gray-400">
+                    No preview available
+                  </span>
+                )}
+                <a
+                  href={track.url}
+                  target="_blank"
+                  className="inline-block px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+                >
+                  Open in Spotify
+                </a>
+              </div>
+            </div>
+          )
+        )}
+      </div>
     </main>
   );
 }
@@ -589,10 +879,11 @@ function UserProfilePage({ onNavigate }) {
   const [error, setError] = React.useState("");
   const [recentJournals, setRecentJournals] = React.useState([]);
   const [achievements, setAchievements] = React.useState([]);
+  const [favoriteQuotes, setFavoriteQuotes] = React.useState([]);
   const token = localStorage.getItem("token");
+  const [selectedMood, setSelectedMood] = React.useState("all");
 
   React.useEffect(() => {
-    // Fetch the user's basic profile
     async function fetchProfile() {
       try {
         const response = await fetch("http://localhost:5000/api/auth/profile", {
@@ -615,11 +906,10 @@ function UserProfilePage({ onNavigate }) {
       }
     }
 
-    // Fetch recent journals (for example, last 5)
     async function fetchRecentJournals() {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/journal?limit=5", // Adjust limit as desired
+          "http://localhost:5000/api/journal?limit=5",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -632,14 +922,12 @@ function UserProfilePage({ onNavigate }) {
           );
         }
         const data = await response.json();
-        // data should have { journals: [...], totalEntries, ... } 
         setRecentJournals(data.journals || []);
       } catch (err) {
         console.error("Error fetching journals:", err);
       }
     }
 
-    // Fetch achievements
     async function fetchAchievements() {
       try {
         const response = await fetch("http://localhost:5000/api/achievements", {
@@ -653,10 +941,31 @@ function UserProfilePage({ onNavigate }) {
           );
         }
         const data = await response.json();
-        // data should be an array of achievements
         setAchievements(data || []);
       } catch (err) {
         console.error("Error fetching achievements:", err);
+      }
+    }
+
+    async function fetchFavoriteQuotes(mood = "all") {
+      try {
+        let url = "http://localhost:5000/api/quotes/favorites";
+        if (mood !== "all") {
+          url += `?mood=${mood}`;
+        }
+
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to load favorite quotes");
+
+        const data = await res.json();
+        setFavoriteQuotes(data || []);
+      } catch (err) {
+        console.error("Error fetching favorite quotes:", err);
       }
     }
 
@@ -664,16 +973,62 @@ function UserProfilePage({ onNavigate }) {
       fetchProfile();
       fetchRecentJournals();
       fetchAchievements();
+      fetchFavoriteQuotes(selectedMood);
     }
   }, [token]);
+
+  async function fetchFavoriteQuotes(mood = "all") {
+    try {
+      let url = "http://localhost:5000/api/quotes/favorites";
+      if (mood !== "all") {
+        url += `?mood=${mood}`;
+      }
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to load favorite quotes");
+
+      const data = await res.json();
+      setFavoriteQuotes(data || []);
+    } catch (err) {
+      console.error("Error fetching favorite quotes:", err);
+    }
+  }
+
+  function deleteFavoriteQuote(quoteId) {
+    if (!window.confirm("Are you sure you want to delete this quote?")) return;
+
+    const token = localStorage.getItem("token");
+
+    fetch(`http://localhost:5000/api/quotes/favorites/${quoteId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Delete failed");
+        // Update UI to remove deleted quote
+        setFavoriteQuotes((prev) => prev.filter((q) => q._id !== quoteId));
+      })
+      .catch((err) => {
+        console.error("Error deleting quote:", err);
+        alert("Something went wrong while deleting the quote.");
+      });
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-4">User Profile</h2>
       {error && <div className="text-red-500 mb-4">{error}</div>}
+
       {profile ? (
         <>
-          {/* Personal Information */}
+          {/* Personal Info */}
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
             <p>
@@ -696,7 +1051,7 @@ function UserProfilePage({ onNavigate }) {
             </p>
           </div>
 
-          {/* Button to go to Update Profile Page */}
+          {/* Update Profile Button */}
           <button
             onClick={() => onNavigate("updateProfile")}
             className="bg-blue-500 text-white px-6 py-2 rounded"
@@ -704,50 +1059,102 @@ function UserProfilePage({ onNavigate }) {
             Update Profile
           </button>
 
-          {/* Activity Overview */}
+          {/* Journals */}
           <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-2">Activity Overview</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              📝 Recent Journal Entries
+            </h3>
+            {recentJournals.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {recentJournals.map((entry) => (
+                  <li key={entry._id} className="mb-2">
+                    <p className="font-medium">
+                      Date: {new Date(entry.createdAt).toLocaleDateString()}
+                    </p>
+                    <p>{entry.text}</p>
+                    {entry.mood && <p>Mood: {entry.mood}</p>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No recent journal entries.</p>
+            )}
+          </div>
 
-            {/* Recent Journal Entries */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold mb-1">
-                Recent Journal Entries
-              </h4>
-              {recentJournals.length > 0 ? (
-                <ul className="list-disc list-inside">
-                  {recentJournals.map((entry) => (
-                    <li key={entry._id} className="mb-2">
-                      <p className="font-medium">
-                        Date: {new Date(entry.createdAt).toLocaleDateString()}
-                      </p>
-                      <p>{entry.text}</p>
-                      {entry.mood && <p>Mood: {entry.mood}</p>}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No recent journal entries.</p>
-              )}
-            </div>
+          {/* Achievements */}
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">🏆 Your Achievements</h3>
+            {achievements.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {achievements.map((ach) => (
+                  <li key={ach.name} className="mb-2">
+                    <strong>{ach.name}</strong> - {ach.description}
+                    {ach.earned && (
+                      <span className="ml-2 text-green-600">(Earned!)</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No achievements earned yet.</p>
+            )}
+          </div>
 
-            {/* Achievements */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Your Achievements</h4>
-              {achievements.length > 0 ? (
-                <ul className="list-disc list-inside">
-                  {achievements.map((ach) => (
-                    <li key={ach.name} className="mb-2">
-                      <strong>{ach.name}</strong> - {ach.description}
-                      {ach.earned && (
-                        <span className="ml-2 text-green-600">(Earned!)</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No achievements earned yet.</p>
-              )}
+          {/* Favorite Quotes */}
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">💖 Favorite Quotes</h3>
+            {/* Mood Filter */}
+            <div className="mb-4 flex items-center gap-4">
+              <label
+                htmlFor="mood-filter"
+                className="font-medium text-gray-700"
+              >
+                Filter by Mood:
+              </label>
+              <select
+                id="mood-filter"
+                value={selectedMood}
+                onChange={(e) => {
+                  const mood = e.target.value;
+                  setSelectedMood(mood);
+                  fetchFavoriteQuotes(mood); // fetch quotes based on mood
+                }}
+                className="border px-3 py-2 rounded"
+              >
+                <option value="all">All</option>
+                <option value="happy">Happy</option>
+                <option value="sad">Sad</option>
+                <option value="calm">Calm</option>
+                <option value="energetic">Energetic</option>
+              </select>
             </div>
+            {favoriteQuotes.length === 0 ? (
+              <p className="text-gray-600">No favorite quotes saved yet.</p>
+            ) : (
+              <ul className="space-y-4">
+                {favoriteQuotes.map((q) => (
+                  <li
+                    key={q._id}
+                    className="bg-white border rounded p-4 shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <p className="italic text-gray-800">"{q.text}"</p>
+                      <button
+                        onClick={() => deleteFavoriteQuote(q._id)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                        title="Delete quote"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-500 mt-2">
+                      <span>— {q.author || "Unknown"}</span>
+                      <span>{q.mood ? `Mood: ${q.mood}` : "Mood: N/A"}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </>
       ) : (
