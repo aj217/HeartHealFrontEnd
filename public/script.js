@@ -174,7 +174,7 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-      if (response.ok) {
+      if (response.ok && data.token) {
         console.log("Login successful:", data);
         localStorage.setItem("token", data.token);
         alert("Login successful!");
@@ -563,12 +563,170 @@ function DashboardPage() {
 
 // JournalPage Component
 function JournalPage() {
+  const [mood, setMood] = React.useState("");
+  const [images, setImages] = React.useState([]);
+  const [quill, setQuill] = React.useState(null);
+  const [entries, setEntries] = React.useState([]);
+
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    const q = new Quill("#editor", {
+      theme: "snow",
+      placeholder: "Write your thoughts here...",
+    });
+    setQuill(q);
+    fetchEntries();
+  }, []);
+
+  const fetchEntries = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/journal?limit=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setEntries(data.journals || []);
+    } catch (err) {
+      console.error("Failed to load entries", err);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!quill) return;
+
+    const formData = new FormData();
+    formData.append("text", quill.root.innerHTML);
+    formData.append("mood", mood);
+    images.forEach((file) => formData.append("images", file));
+
+    try {
+      const res = await fetch("http://localhost:5000/api/journal", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        alert("Journal entry saved!");
+        quill.root.innerHTML = "";
+        setMood("");
+        setImages([]);
+        fetchEntries();
+      } else {
+        let message = "Failed to save journal.";
+        try {
+          const errData = await res.json();
+          if (errData.message) message = errData.message;
+        } catch (jsonErr) {
+          console.warn("Failed to parse error JSON", jsonErr);
+        }
+        alert(message);
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      alert("Something went wrong while saving your journal.");
+    }
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-4">Journal</h2>
-      <p>
-        This is your journal page. Record your thoughts and track your progress.
-      </p>
+      <h2 className="text-3xl font-bold mb-6">📝 Journal</h2>
+
+      {/* Form */}
+      <div className="bg-white shadow rounded-lg p-6 mb-10">
+        <div className="mb-4">
+          <label className="block font-semibold mb-1">Mood</label>
+          <select
+            value={mood}
+            onChange={(e) => setMood(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+          >
+            <option value="">Select mood</option>
+            <option value="happy">😊 Happy</option>
+            <option value="sad">😢 Sad</option>
+            <option value="motivated">💪 Motivated</option>
+            <option value="angry">😡 Angry</option>
+            <option value="excited">🎉 Excited</option>
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block font-semibold mb-1">
+            Write your thoughts
+          </label>
+          <div id="editor" className="bg-white border rounded h-48"></div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block font-semibold mb-1">Attach Image(s)</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => setImages(Array.from(e.target.files))}
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
+          Submit Entry
+        </button>
+      </div>
+
+      {/* Journal Entry List */}
+      <section>
+        <h3 className="text-xl font-semibold mb-4">📥 Your Entries</h3>
+        <p className="text-sm text-gray-600 mt-2 italic">
+          Only your latest 10 entries are visible here. To keep a special memory
+          safe, feel free to download it anytime.
+        </p>
+
+        {entries.length === 0 ? (
+          <p className="text-gray-500">No entries yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {entries.map((entry) => (
+              <li
+                key={entry._id}
+                className="border rounded p-4 bg-white shadow"
+              >
+                <div className="flex justify-between items-center">
+                  <p className="font-medium text-blue-700">
+                    {new Date(entry.createdAt).toLocaleDateString()} —{" "}
+                    {entry.mood || "Mood not selected"}
+                  </p>
+                  <button
+                    onClick={() => {
+                      const token = localStorage.getItem("token");
+                      const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}?token=${token}`;
+                      window.open(downloadUrl, "_blank");
+                    }}
+                    className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
+                  >
+                    ⬇ Download
+                  </button>
+                </div>
+
+                {/* 🖼️ Image Thumbnails */}
+                {entry.images && entry.images.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {entry.images.map((imgUrl, index) => (
+                      <img
+                        key={index}
+                        src={`http://localhost:5000${imgUrl}`}
+                        alt={`Journal Image ${index}`}
+                        className="w-20 h-20 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }
@@ -1022,6 +1180,7 @@ function UserProfilePage({ onNavigate }) {
             ) : (
               <p>No profile picture set.</p>
             )}
+
             <p>
               <strong>Bio:</strong> {profile.bio}
             </p>
