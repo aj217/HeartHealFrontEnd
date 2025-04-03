@@ -171,13 +171,12 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // crucial for cookie-based auth
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
-      if (response.ok) {
+      if (response.ok && data.token) {
         console.log("Login successful:", data);
+        localStorage.setItem("token", data.token);
         alert("Login successful!");
         onAuthSuccess();
         onNavigate("dashboard");
@@ -263,24 +262,19 @@ function SignupPage({ onNavigate }) {
     e.preventDefault();
     setError("");
     setMessage("");
-
     if (!validatePassword(password)) {
       setError(
         "Password must be at least 8 characters long, include a number and a special character."
       );
       return;
     }
-
     try {
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // allow sending/receiving cookies
         body: JSON.stringify({ name, email, password }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
         setMessage("User registered successfully!");
       } else {
@@ -367,7 +361,7 @@ function SignupPage({ onNavigate }) {
 }
 
 // ForgotPasswordPage Component
-function ForgotPassword({ onNavigate }) {
+function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = React.useState("");
   const [message, setMessage] = React.useState("");
   const [error, setError] = React.useState("");
@@ -378,29 +372,27 @@ function ForgotPassword({ onNavigate }) {
     setMessage("");
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         "http://localhost:5000/api/auth/forgot-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({ email }),
         }
       );
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (response.ok) {
-        setMessage("Password reset instructions sent to your email.");
+      if (res.ok) {
+        setMessage("Reset instructions sent to your email.");
       } else {
-        setError(data.message || "Failed to send reset instructions.");
+        setError(data.message || "Failed to send reset email.");
       }
     } catch (err) {
-      console.error("Forgot Password error:", err);
-      setError("An error occurred. Please try again.");
+      console.error("Forgot password error:", err);
+      setError("Something went wrong. Please try again.");
     }
   };
-
   return (
     <main className="container mx-auto px-4 py-8 max-w-md">
       <h2 className="text-2xl font-bold mb-6 text-center">Forgot Password</h2>
@@ -447,7 +439,6 @@ function ForgotPassword({ onNavigate }) {
 function ResetPasswordPage({ onNavigate }) {
   const queryParams = new URLSearchParams(window.location.search);
   const tokenFromURL = queryParams.get("token");
-
   const [token, setToken] = React.useState(tokenFromURL || "");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -456,37 +447,31 @@ function ResetPasswordPage({ onNavigate }) {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
-
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
-
     if (!validatePassword(newPassword)) {
       setError(
         "Password must be at least 8 characters long, include a number and a special character."
       );
       return;
     }
-
     if (!token) {
       setError("Reset token is missing.");
       return;
     }
-
     try {
       const response = await fetch(
         `http://localhost:5000/api/auth/reset-password/${token}`,
+
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // added for consistency and security
           body: JSON.stringify({ password: newPassword }),
         }
       );
-
       const data = await response.json();
-
       if (response.ok) {
         alert(
           "Password reset successful! Please log in with your new password."
@@ -567,6 +552,7 @@ function ResetPasswordPage({ onNavigate }) {
 // DashboardPage Component
 function DashboardPage() {
   const [progress, setProgress] = React.useState(null);
+  const token = localStorage.getItem("token");
 
   // Fetch progress data on mount
   React.useEffect(() => {
@@ -576,14 +562,8 @@ function DashboardPage() {
   const fetchProgress = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/progress", {
-        method: "GET",
-        credentials: "include", // Cookie-based session
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) {
-        throw new Error("Unauthorized or error fetching progress");
-      }
-
       const data = await res.json();
       setProgress(data);
     } catch (err) {
@@ -672,6 +652,8 @@ function JournalPage() {
   const [quill, setQuill] = React.useState(null);
   const [entries, setEntries] = React.useState([]);
 
+  const token = localStorage.getItem("token");
+
   React.useEffect(() => {
     const q = new Quill("#editor", {
       theme: "snow",
@@ -684,7 +666,7 @@ function JournalPage() {
   const fetchEntries = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/journal?limit=10", {
-        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setEntries(data.journals || []);
@@ -709,7 +691,7 @@ function JournalPage() {
   const handleSubmit = async () => {
     if (!quill) return;
 
-    // Empty journal validation
+    // 🛡️ Empty journal validation
     const htmlContent = quill.root.innerHTML.trim();
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlContent;
@@ -728,7 +710,7 @@ function JournalPage() {
     try {
       const res = await fetch("http://localhost:5000/api/journal", {
         method: "POST",
-        credentials: "include", 
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -736,7 +718,7 @@ function JournalPage() {
         const data = await res.json();
         alert("Journal entry saved!");
 
-        // Show milestone achievement toasts
+        // 🎉 Show milestone achievement toasts
         if (data.unlockedMilestones && data.unlockedMilestones.length > 0) {
           data.unlockedMilestones.forEach((m) => {
             showMilestoneToast(`Achievement Unlocked: ${m}`);
@@ -834,7 +816,7 @@ function JournalPage() {
                   </p>
                   <button
                     onClick={() => {
-                      const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}`;
+                      const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}?token=${token}`;
                       window.open(downloadUrl, "_blank");
                     }}
                     className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
@@ -843,7 +825,7 @@ function JournalPage() {
                   </button>
                 </div>
 
-                {/* Image Thumbnails */}
+                {/* 🖼️ Image Thumbnails */}
                 {entry.images && entry.images.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {entry.images.map((imgUrl, index) => (
@@ -924,12 +906,13 @@ function MusicQuotePage() {
 
   const saveQuoteToFavorites = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/quotes/favorite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
         body: JSON.stringify({
           text: quote,
           author: quoteAuthor,
@@ -977,7 +960,8 @@ function MusicQuotePage() {
   };
 
   const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
+    const token = localStorage.getItem("token");
+    if (!searchTerm.trim() || !token) return;
 
     setIsLoading(true);
     setError("");
@@ -987,7 +971,9 @@ function MusicQuotePage() {
           searchTerm
         )}`,
         {
-          credentials: "include", 
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       if (!res.ok) throw new Error("Search failed");
@@ -1161,12 +1147,13 @@ function MusicQuotePage() {
   );
 }
 
-// UserProfilePage Component (Profile Display)
+// UserProfile page
 function UserProfilePage({ onNavigate }) {
   const [profile, setProfile] = React.useState(null);
   const [error, setError] = React.useState("");
   const [achievements, setAchievements] = React.useState([]);
   const [favoriteQuotes, setFavoriteQuotes] = React.useState([]);
+  const token = localStorage.getItem("token");
   const [selectedMood, setSelectedMood] = React.useState("all");
 
   React.useEffect(() => {
@@ -1176,8 +1163,8 @@ function UserProfilePage({ onNavigate }) {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         });
         if (!response.ok) {
           throw new Error(
@@ -1195,7 +1182,9 @@ function UserProfilePage({ onNavigate }) {
     async function fetchAchievements() {
       try {
         const response = await fetch("http://localhost:5000/api/achievements", {
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         if (!response.ok) {
           throw new Error(
@@ -1209,12 +1198,34 @@ function UserProfilePage({ onNavigate }) {
       }
     }
 
-    if (true) {
+    async function fetchFavoriteQuotes(mood = "all") {
+      try {
+        let url = "http://localhost:5000/api/quotes/favorites";
+        if (mood !== "all") {
+          url += `?mood=${mood}`;
+        }
+
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to load favorite quotes");
+
+        const data = await res.json();
+        setFavoriteQuotes(data || []);
+      } catch (err) {
+        console.error("Error fetching favorite quotes:", err);
+      }
+    }
+
+    if (token) {
       fetchProfile();
       fetchAchievements();
       fetchFavoriteQuotes(selectedMood);
     }
-  }, []);
+  }, [token]);
 
   async function fetchFavoriteQuotes(mood = "all") {
     try {
@@ -1224,7 +1235,9 @@ function UserProfilePage({ onNavigate }) {
       }
 
       const res = await fetch(url, {
-        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!res.ok) throw new Error("Failed to load favorite quotes");
@@ -1239,12 +1252,17 @@ function UserProfilePage({ onNavigate }) {
   function deleteFavoriteQuote(quoteId) {
     if (!window.confirm("Are you sure you want to delete this quote?")) return;
 
+    const token = localStorage.getItem("token");
+
     fetch(`http://localhost:5000/api/quotes/favorites/${quoteId}`, {
       method: "DELETE",
-      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error("Delete failed");
+        // Update UI to remove deleted quote
         setFavoriteQuotes((prev) => prev.filter((q) => q._id !== quoteId));
       })
       .catch((err) => {
@@ -1278,6 +1296,7 @@ function UserProfilePage({ onNavigate }) {
             ) : (
               <p>No profile picture set.</p>
             )}
+
             <p>
               <strong>Bio:</strong> {profile.bio}
             </p>
@@ -1327,7 +1346,7 @@ function UserProfilePage({ onNavigate }) {
                 onChange={(e) => {
                   const mood = e.target.value;
                   setSelectedMood(mood);
-                  fetchFavoriteQuotes(mood);
+                  fetchFavoriteQuotes(mood); // fetch quotes based on mood
                 }}
                 className="border px-3 py-2 rounded"
               >
@@ -1381,6 +1400,7 @@ function UpdateProfilePage({ onNavigate }) {
   const [previewPic, setPreviewPic] = React.useState(null);
   const [error, setError] = React.useState("");
   const [message, setMessage] = React.useState("");
+  const token = localStorage.getItem("token");
 
   React.useEffect(() => {
     async function fetchProfile() {
@@ -1388,8 +1408,8 @@ function UpdateProfilePage({ onNavigate }) {
         const response = await fetch("http://localhost:5000/api/auth/profile", {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         });
         const data = await response.json();
         setFormData({ name: data.name || "", bio: data.bio || "" });
@@ -1399,7 +1419,7 @@ function UpdateProfilePage({ onNavigate }) {
       }
     }
     fetchProfile();
-  }, []);
+  }, [token]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -1430,7 +1450,7 @@ function UpdateProfilePage({ onNavigate }) {
     try {
       const response = await fetch("http://localhost:5000/api/auth/update", {
         method: "PUT",
-        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
         body: updateData,
       });
       const data = await response.json();
@@ -1547,6 +1567,7 @@ function showMilestoneToast(message) {
 // Achievement Component
 function AchievementsSection() {
   const [achievements, setAchievements] = React.useState([]);
+  const token = localStorage.getItem("token");
 
   React.useEffect(() => {
     fetchAchievements();
@@ -1555,7 +1576,7 @@ function AchievementsSection() {
   const fetchAchievements = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/achievements", {
-        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setAchievements(data);
@@ -1597,6 +1618,7 @@ function AchievementsSection() {
 // Milestone component
 function MilestoneWidget() {
   const [milestones, setMilestones] = React.useState([]);
+  const token = localStorage.getItem("token");
 
   React.useEffect(() => {
     fetchMilestones();
@@ -1605,7 +1627,7 @@ function MilestoneWidget() {
   const fetchMilestones = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/milestones", {
-        credentials: "include", 
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setMilestones(data.slice(0, 3)); // Show only the latest 3
@@ -1652,6 +1674,7 @@ function ChallengeWidget() {
   const [completed, setCompleted] = React.useState(false);
   const [message, setMessage] = React.useState("");
   const [loading, setLoading] = React.useState(true);
+  const token = localStorage.getItem("token");
 
   React.useEffect(() => {
     fetchDailyChallenge();
@@ -1660,7 +1683,7 @@ function ChallengeWidget() {
   const fetchDailyChallenge = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/challenges/daily", {
-        credentials: "include", 
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch challenge");
       const data = await res.json();
@@ -1677,7 +1700,7 @@ function ChallengeWidget() {
   const checkIfCompleted = async (challengeId) => {
     try {
       const res = await fetch("http://localhost:5000/api/auth/profile", {
-        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       const completedIds = data.completedChallenges || [];
@@ -1704,9 +1727,9 @@ function ChallengeWidget() {
       const res = await fetch("http://localhost:5000/api/challenges/complete", {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
       const data = await res.json();
       if (res.ok) {
