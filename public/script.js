@@ -646,13 +646,11 @@ function DashboardPage() {
 }
 
 // JournalPage Component
-function JournalPage() {
+function JournalPage({ onNavigate }) {
   const [mood, setMood] = React.useState("");
   const [images, setImages] = React.useState([]);
   const [quill, setQuill] = React.useState(null);
   const [entries, setEntries] = React.useState([]);
-
-  const token = localStorage.getItem("token");
 
   React.useEffect(() => {
     const q = new Quill("#editor", {
@@ -665,9 +663,18 @@ function JournalPage() {
 
   const fetchEntries = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/journal?limit=10", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (res.status === 401) {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        onNavigate("login");
+        return;
+      }
+
       const data = await res.json();
       setEntries(data.journals || []);
     } catch (err) {
@@ -691,7 +698,6 @@ function JournalPage() {
   const handleSubmit = async () => {
     if (!quill) return;
 
-    // 🛡️ Empty journal validation
     const htmlContent = quill.root.innerHTML.trim();
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlContent;
@@ -708,17 +714,27 @@ function JournalPage() {
     images.forEach((file) => formData.append("images", file));
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch("http://localhost:5000/api/journal", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
+
+      if (res.status === 401) {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        onNavigate("login");
+        return;
+      }
 
       if (res.ok) {
         const data = await res.json();
         alert("Journal entry saved!");
 
-        // 🎉 Show milestone achievement toasts
         if (data.unlockedMilestones && data.unlockedMilestones.length > 0) {
           data.unlockedMilestones.forEach((m) => {
             showMilestoneToast(`Achievement Unlocked: ${m}`);
@@ -749,7 +765,6 @@ function JournalPage() {
     <main className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6">📝 Journal</h2>
 
-      {/* Form */}
       <div className="bg-white shadow rounded-lg p-6 mb-10">
         <div className="mb-4">
           <label className="block font-semibold mb-1">Mood</label>
@@ -792,7 +807,6 @@ function JournalPage() {
         </button>
       </div>
 
-      {/* Journal Entry List */}
       <section>
         <h3 className="text-xl font-semibold mb-4">📥 Your Entries</h3>
         <p className="text-sm text-gray-600 mt-2 italic">
@@ -816,8 +830,9 @@ function JournalPage() {
                   </p>
                   <button
                     onClick={() => {
+                      const token = localStorage.getItem("token");
                       const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}?token=${token}`;
-                      window.open(downloadUrl, "_blank");
+                      window.location.href = downloadUrl;
                     }}
                     className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
                   >
@@ -825,7 +840,6 @@ function JournalPage() {
                   </button>
                 </div>
 
-                {/* 🖼️ Image Thumbnails */}
                 {entry.images && entry.images.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {entry.images.map((imgUrl, index) => (
