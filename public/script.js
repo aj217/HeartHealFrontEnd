@@ -1296,9 +1296,15 @@ function UserProfilePage({ onNavigate }) {
             ) : (
               <p>No profile picture set.</p>
             )}
-
             <p>
               <strong>Bio:</strong> {profile.bio}
+            </p>
+
+            <p>
+              <strong>Level:</strong> {profile.level ?? 1}
+            </p>
+            <p>
+              <strong>XP:</strong> {profile.xp ?? 0} XP
             </p>
           </div>
 
