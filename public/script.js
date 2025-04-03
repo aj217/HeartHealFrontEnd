@@ -567,7 +567,6 @@ function ResetPasswordPage({ onNavigate }) {
 // DashboardPage Component
 function DashboardPage() {
   const [progress, setProgress] = React.useState(null);
-  const token = localStorage.getItem("token");
 
   // Fetch progress data on mount
   React.useEffect(() => {
