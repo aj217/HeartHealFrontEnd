@@ -550,13 +550,96 @@ function ResetPasswordPage({ onNavigate }) {
 
 // DashboardPage Component
 function DashboardPage() {
+  const [progress, setProgress] = React.useState(null);
+  const token = localStorage.getItem("token");
+
+  // Fetch progress data on mount
+  React.useEffect(() => {
+    fetchProgress();
+  }, []);
+
+  const fetchProgress = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/progress", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setProgress(data);
+    } catch (err) {
+      console.error("Error fetching progress:", err);
+    }
+  };
+
+  // Render chart once progress is fetched
+  React.useEffect(() => {
+    if (progress && progress.moodStats) {
+      const ctx = document.getElementById("moodChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: Object.keys(progress.moodStats),
+          datasets: [
+            {
+              label: "Mood Tracker",
+              data: Object.values(progress.moodStats),
+              backgroundColor: [
+                "#3B82F6",
+                "#EF4444",
+                "#10B981",
+                "#F59E0B",
+                "#6366F1",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    }
+  }, [progress]);
+
   return (
     <main className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-4">Dashboard</h2>
-      <p>
-        Welcome to your dashboard! Here you can see an overview of your
-        activity.
-      </p>
+      <h2 className="text-3xl font-bold mb-6">📊 Healing Dashboard</h2>
+
+      {/* Chart Section */}
+      <div className="bg-white p-6 rounded shadow-md">
+        <h3 className="text-xl font-semibold mb-4">Mood Entry Chart</h3>
+        <div className="relative h-64">
+          <canvas id="moodChart"></canvas>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      {progress && (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="bg-blue-100 p-4 rounded shadow">
+            <h4 className="text-lg font-bold">Journal Entries</h4>
+            <p className="text-2xl">{progress.journalCount}</p>
+          </div>
+          <div className="bg-green-100 p-4 rounded shadow">
+            <h4 className="text-lg font-bold">Current Streak</h4>
+            <p className="text-2xl">{progress.streak} Days</p>
+          </div>
+          <div className="bg-purple-100 p-4 rounded shadow">
+            <h4 className="text-lg font-bold">Total Moods Logged</h4>
+            <p className="text-2xl">
+              {Object.values(progress.moodStats).reduce((a, b) => a + b, 0)}
+            </p>
+          </div>
+        </div>
+      )}
+      {/* Gamification & Daily Engagement Section */}
+      <section className="mt-10">
+        <h3 className="text-2xl font-bold mb-4">Your Daily Wellness Journey</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <MilestoneWidget />
+          <ChallengeWidget />
+          <AffirmationWidget />
+        </div>
+      </section>
     </main>
   );
 }
@@ -591,11 +674,35 @@ function JournalPage() {
     }
   };
 
+  const showMilestoneToast = (message) => {
+    const toast = document.getElementById("milestone-toast");
+    const text = document.getElementById("milestone-message");
+    text.textContent = `🏆 ${message}`;
+    toast.classList.remove("hidden");
+    toast.classList.add("show");
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hidden");
+    }, 4000);
+  };
+
   const handleSubmit = async () => {
     if (!quill) return;
 
+    // 🛡️ Empty journal validation
+    const htmlContent = quill.root.innerHTML.trim();
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
+    const plainText = tempDiv.textContent.trim();
+
+    if (!plainText) {
+      alert("Your journal is empty. Please fill it before submitting.");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("text", quill.root.innerHTML);
+    formData.append("text", htmlContent);
     formData.append("mood", mood);
     images.forEach((file) => formData.append("images", file));
 
@@ -607,7 +714,16 @@ function JournalPage() {
       });
 
       if (res.ok) {
+        const data = await res.json();
         alert("Journal entry saved!");
+
+        // 🎉 Show milestone achievement toasts
+        if (data.unlockedMilestones && data.unlockedMilestones.length > 0) {
+          data.unlockedMilestones.forEach((m) => {
+            showMilestoneToast(`Achievement Unlocked: ${m}`);
+          });
+        }
+
         quill.root.innerHTML = "";
         setMood("");
         setImages([]);
@@ -699,7 +815,6 @@ function JournalPage() {
                   </p>
                   <button
                     onClick={() => {
-                      const token = localStorage.getItem("token");
                       const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}?token=${token}`;
                       window.open(downloadUrl, "_blank");
                     }}
@@ -1199,14 +1314,14 @@ function UserProfilePage({ onNavigate }) {
             <h3 className="text-xl font-semibold mb-2">🏆 Your Achievements</h3>
             {achievements.length > 0 ? (
               <ul className="list-disc list-inside">
-                {achievements.map((ach) => (
-                  <li key={ach.name} className="mb-2">
-                    <strong>{ach.name}</strong> - {ach.description}
-                    {ach.earned && (
+                {achievements
+                  .filter((ach) => ach.earned)
+                  .map((ach) => (
+                    <li key={ach.name} className="mb-2">
+                      <strong>{ach.name}</strong> - {ach.description}
                       <span className="ml-2 text-green-600">(Earned!)</span>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  ))}
               </ul>
             ) : (
               <p>No achievements earned yet.</p>
@@ -1418,6 +1533,298 @@ function UpdateProfilePage({ onNavigate }) {
         Cancel
       </button>
     </main>
+  );
+}
+
+// Toaster function for the level upgrade notification
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    toast.classList.add("hidden");
+  }, 4000);
+}
+
+// Toaster function for the unlocking milestone notification
+function showMilestoneToast(message) {
+  const toast = document.getElementById("milestone-toast");
+  const text = document.getElementById("milestone-message");
+
+  text.textContent = `🏆 ${message}`;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 4000);
+}
+
+// Gamification & badges Components
+// Achievement Component
+function AchievementsSection() {
+  const [achievements, setAchievements] = React.useState([]);
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    fetchAchievements();
+  }, []);
+
+  const fetchAchievements = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/achievements", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setAchievements(data);
+    } catch (err) {
+      console.error("Error fetching achievements:", err);
+    }
+  };
+
+  return (
+    <section className="my-8">
+      <h2 className="text-2xl font-bold mb-4">🏅 Achievements</h2>
+      {achievements.length === 0 ? (
+        <p className="text-gray-500">No achievements unlocked yet.</p>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {achievements.map((badge) => (
+            <div
+              key={badge.name}
+              className="bg-white shadow-md rounded-lg p-4 text-center"
+            >
+              <img
+                src={badge.icon || "/images/default_badge.png"}
+                alt={badge.name}
+                className="w-16 h-16 mx-auto mb-2"
+              />
+              <h4 className="font-semibold">{badge.name}</h4>
+              <p className="text-sm text-gray-500">{badge.description}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {new Date(badge.achievedAt).toLocaleDateString()}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Milestone component
+function MilestoneWidget() {
+  const [milestones, setMilestones] = React.useState([]);
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    fetchMilestones();
+  }, []);
+
+  const fetchMilestones = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/milestones", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setMilestones(data.slice(0, 3)); // Show only the latest 3
+    } catch (err) {
+      console.error("Milestone fetch error:", err);
+    }
+  };
+
+  return (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-md text-center">
+      <h3 className="text-lg font-semibold text-yellow-800 mb-3">
+        🏁 Recent Milestones
+      </h3>
+
+      {milestones.length === 0 ? (
+        <p className="text-gray-500">No milestones unlocked yet.</p>
+      ) : (
+        <ul className="space-y-3">
+          {milestones.map((m) => (
+            <li
+              key={m._id}
+              className="bg-white border rounded p-3 shadow-sm text-left"
+            >
+              <span className="block text-blue-700 font-semibold">
+                {m.milestoneType}
+              </span>
+              <span className="text-sm text-gray-500">
+                Achieved on{" "}
+                {new Date(m.achievedAt || m.createdAt).toLocaleDateString(
+                  "en-GB"
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Challenge component
+function ChallengeWidget() {
+  const [challenge, setChallenge] = React.useState(null);
+  const [completed, setCompleted] = React.useState(false);
+  const [message, setMessage] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
+  const token = localStorage.getItem("token");
+
+  React.useEffect(() => {
+    fetchDailyChallenge();
+  }, []);
+
+  const fetchDailyChallenge = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/challenges/daily", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch challenge");
+      const data = await res.json();
+      setChallenge(data);
+      checkIfCompleted(data._id);
+    } catch (err) {
+      console.error("Challenge fetch error:", err);
+      setMessage("Could not load today's challenge.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkIfCompleted = async (challengeId) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const completedIds = data.completedChallenges || [];
+      setCompleted(completedIds.includes(challengeId));
+    } catch (err) {
+      console.error("Failed to verify challenge status", err);
+    }
+  };
+
+  const showToast = (text) => {
+    const toast = document.getElementById("toast");
+    toast.textContent = text;
+    toast.classList.remove("hidden");
+    toast.classList.add("show");
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hidden");
+    }, 4000);
+  };
+
+  const handleComplete = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/challenges/complete", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCompleted(true);
+        setMessage(`Challenge completed! (+${data.xpEarned} XP)`);
+
+        if (data.leveledUp) {
+          showToast(`🎉 Congrats! You've reached Level ${data.level}!`);
+        }
+      } else {
+        setMessage(` ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Completion error:", err);
+      setMessage("Something went wrong.");
+    }
+  };
+
+  return (
+    <div className="bg-yellow-50 border border-yellow-300 rounded p-4 shadow text-center">
+      <h3 className="text-xl font-bold mb-2 text-orange-800">
+        🎯 Today's Challenge
+      </h3>
+
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : challenge ? (
+        <>
+          <p className="text-lg font-medium mb-2">{challenge.description}</p>
+          <p className="text-sm text-orange-700 mb-3">
+            XP: {challenge.xpReward}
+          </p>
+          <button
+            disabled={completed}
+            onClick={handleComplete}
+            className={`px-6 py-2 rounded text-white font-semibold ${
+              completed
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-black hover:bg-gray-800"
+            }`}
+          >
+            {completed ? "Completed" : "Mark as Done"}
+          </button>
+          {message && <p className="mt-2 text-green-700 text-sm">{message}</p>}
+        </>
+      ) : (
+        <p className="text-gray-500">No challenge available for today.</p>
+      )}
+    </div>
+  );
+}
+
+// Affrimation Component
+function AffirmationWidget() {
+  const [affirmations, setAffirmations] = React.useState([]);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  const fetchAffirmations = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/affirmations?page=1&limit=60&category=motivational"
+      );
+      const data = await res.json();
+      setAffirmations(data.affirmations);
+    } catch (error) {
+      console.error("Failed to fetch affirmations:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchAffirmations();
+  }, []);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) =>
+        affirmations.length ? (prevIndex + 1) % affirmations.length : 0
+      );
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [affirmations]);
+
+  return (
+    <div className="bg-yellow-50 border border-yellow-300 rounded p-4 shadow text-center">
+      <h3 className="text-lg font-semibold text-[#8B4513] mb-2">
+        💬 Daily Affirmation
+      </h3>
+      {affirmations.length === 0 ? (
+        <p className="text-gray-500 text-sm">No affirmation found.</p>
+      ) : (
+        <p className="text-purple-800 italic font-medium text-sm transition-opacity duration-500 ease-in-out">
+          "{affirmations[currentIndex].text}"
+        </p>
+      )}
+    </div>
   );
 }
 
