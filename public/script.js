@@ -43,7 +43,7 @@ function UserNavbar({ onNavigate, onLogout }) {
   return (
     <nav className="bg-blue-600 shadow">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="text-xl font-bold text-white">HeartHeal Dashboard</div>
+        <div className="text-xl font-bold text-white">HeartHeal</div>
         <div>
           <a
             href="#"
@@ -108,47 +108,58 @@ function LandingPage({ onNavigate }) {
   };
 
   return (
-    <main className="container mx-auto px-4 py-20 text-center">
-      <h1 className="text-4xl font-bold mb-4">Welcome to HeartHeal</h1>
-      <p className="text-lg mb-8">
-        At HeartHeal, our mission is to support you in your journey to emotional
-        recovery and well-being. Explore expert advice, community support, and
-        personalized resources to help you heal your heart.
-      </p>
-      <button
-        onClick={handleGetStarted}
-        className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
-      >
-        Get Started
-      </button>
-      <FeaturesSection />
-    </main>
-  );
-}
-
-// FeaturesSection Component
-function FeaturesSection() {
-  return (
-    <section className="mt-12">
-      <h2 className="text-2xl font-semibold mb-6">Key Features</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Feature 1 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Daily Journaling</h3>
-          <p>Express your thoughts and track your emotional journey</p>
-        </div>
-        {/* Feature 2 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Calming Music</h3>
-          <p>Discover peaceful melodies to soothe your mind</p>
-        </div>
-        {/* Feature 3 */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-bold mb-2">Daily Quotes</h3>
-          <p>Find inspiration in a variety of curated quotes</p>
-        </div>
+    <main className="w-full bg-gradient-to-b from-blue-50 via-white to-blue-100 py-12 px-4">
+      {/* Welcome Section */}
+      <div className="max-w-4xl mx-auto text-center">
+        <h1 className="text-4xl font-extrabold mb-4 text-gray-800">
+          Welcome to HeartHeal
+        </h1>
+        <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+          At HeartHeal, our mission is to support you in your journey to
+          emotional recovery and well-being. Explore expert advice, community
+          support, and personalized resources to help you heal your heart.
+        </p>
+        <button
+          onClick={handleGetStarted}
+          className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition duration-200"
+        >
+          Get Started
+        </button>
       </div>
-    </section>
+
+      {/* Feature Section */}
+      <section className="mt-20 px-4 max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+          Key Features
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Feature 1 */}
+          <div className="bg-gradient-to-br from-green-400 to-emerald-500 text-white p-6 rounded-2xl shadow-xl transition-transform hover:scale-105 backdrop-blur-md">
+            <h3 className="text-xl font-semibold mb-2">📝 Daily Journaling</h3>
+            <p className="text-sm text-white/90">
+              Express your thoughts and track your emotional journey each day.
+            </p>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-xl transition-transform hover:scale-105 backdrop-blur-md">
+            <h3 className="text-xl font-semibold mb-2">🎵 Calming Music</h3>
+            <p className="text-sm text-white/90">
+              Discover peaceful melodies to soothe and relax your mind.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="bg-gradient-to-br from-pink-400 to-rose-500 text-white p-6 rounded-2xl shadow-xl transition-transform hover:scale-105 backdrop-blur-md">
+            <h3 className="text-xl font-semibold mb-2">💬 Daily Quotes</h3>
+            <p className="text-sm text-white/90">
+              Find daily inspiration through a variety of curated quotes.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -1286,72 +1297,91 @@ function UserProfilePage({ onNavigate }) {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-4">User Profile</h2>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+    <main className="w-full min-h-screen px-8 py-10 space-y-10 bg-gradient-to-b from-white to-blue-50">
+      <h2 className="text-3xl font-bold text-gray-800">👤 User Profile</h2>
+
+      {error && (
+        <div className="text-red-500 font-medium bg-red-100 border border-red-300 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
 
       {profile ? (
         <>
           {/* Personal Info */}
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
-            <p>
-              <strong>Name:</strong> {profile.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {profile.email}
-            </p>
-            {profile.profilePicture ? (
-              <img
-                src={`http://localhost:5000/${profile.profilePicture}`}
-                alt="Profile"
-                className="w-32 h-32 rounded-full mt-2"
-              />
-            ) : (
-              <p>No profile picture set.</p>
-            )}
-            <p>
-              <strong>Bio:</strong> {profile.bio}
-            </p>
+          <section className="bg-white rounded-xl shadow p-6 space-y-4">
+            <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+              Personal Information
+            </h3>
 
-            <p>
-              <strong>Level:</strong> {profile.level ?? 1}
-            </p>
-            <p>
-              <strong>XP:</strong> {profile.xp ?? 0} XP
-            </p>
-          </div>
+            <div className="flex items-center gap-6 flex-wrap">
+              {profile?.profilePicture ? (
+                <img
+                  src={`http://localhost:5000/${profile.profilePicture}`}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border shadow"
+                />
+              ) : (
+                <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 border text-sm">
+                  No Image
+                </div>
+              )}
 
-          {/* Update Profile Button */}
-          <button
-            onClick={() => onNavigate("updateProfile")}
-            className="bg-blue-500 text-white px-6 py-2 rounded"
-          >
-            Update Profile
-          </button>
+              <div className="space-y-1 text-gray-700">
+                <p>
+                  <strong>Name:</strong> {profile?.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {profile?.email}
+                </p>
+                <p>
+                  <strong>Bio:</strong> {profile?.bio || "No bio yet."}
+                </p>
+                <p>
+                  <strong>Level:</strong> {profile?.level ?? 1}
+                </p>
+                <p>
+                  <strong>XP:</strong> {profile?.xp ?? 0} XP
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onNavigate("updateProfile")}
+              className="mt-4 bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600 transition"
+            >
+              Update Profile
+            </button>
+          </section>
 
           {/* Achievements */}
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-2">🏆 Your Achievements</h3>
-            {achievements.length > 0 ? (
-              <ul className="list-disc list-inside">
+          <section className="bg-white rounded-xl shadow p-6 space-y-4">
+            <h3 className="text-xl font-semibold text-yellow-600 border-b pb-2">
+              🏆 Your Achievements
+            </h3>
+
+            {achievements?.filter((ach) => ach.earned).length > 0 ? (
+              <ul className="list-disc pl-5 text-gray-700 space-y-2">
                 {achievements
                   .filter((ach) => ach.earned)
                   .map((ach) => (
-                    <li key={ach.name} className="mb-2">
-                      <strong>{ach.name}</strong> - {ach.description}
-                      <span className="ml-2 text-green-600">(Earned!)</span>
+                    <li key={ach.name}>
+                      <strong>{ach.name}</strong> – {ach.description}
+                      <span className="text-green-600 ml-2">(Earned!)</span>
                     </li>
                   ))}
               </ul>
             ) : (
-              <p>No achievements earned yet.</p>
+              <p className="text-gray-500">No achievements earned yet.</p>
             )}
-          </div>
+          </section>
 
           {/* Favorite Quotes */}
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-2">💖 Favorite Quotes</h3>
+          <section className="bg-white rounded-xl shadow p-6 space-y-4">
+            <h3 className="text-xl font-semibold text-pink-600 border-b pb-2">
+              💖 Favorite Quotes
+            </h3>
+
             {/* Mood Filter */}
             <div className="mb-4 flex items-center gap-4">
               <label
@@ -1366,9 +1396,9 @@ function UserProfilePage({ onNavigate }) {
                 onChange={(e) => {
                   const mood = e.target.value;
                   setSelectedMood(mood);
-                  fetchFavoriteQuotes(mood); // fetch quotes based on mood
+                  fetchFavoriteQuotes(mood);
                 }}
-                className="border px-3 py-2 rounded"
+                className="border border-gray-300 px-3 py-2 rounded"
               >
                 <option value="all">All</option>
                 <option value="happy">Happy</option>
@@ -1377,14 +1407,15 @@ function UserProfilePage({ onNavigate }) {
                 <option value="energetic">Energetic</option>
               </select>
             </div>
+
             {favoriteQuotes.length === 0 ? (
-              <p className="text-gray-600">No favorite quotes saved yet.</p>
+              <p className="text-gray-500">No favorite quotes saved yet.</p>
             ) : (
               <ul className="space-y-4">
                 {favoriteQuotes.map((q) => (
                   <li
                     key={q._id}
-                    className="bg-white border rounded p-4 shadow"
+                    className="bg-gray-50 border rounded-lg p-4 shadow-sm"
                   >
                     <div className="flex justify-between items-start">
                       <p className="italic text-gray-800">"{q.text}"</p>
@@ -1404,10 +1435,10 @@ function UserProfilePage({ onNavigate }) {
                 ))}
               </ul>
             )}
-          </div>
+          </section>
         </>
       ) : (
-        <p>Loading profile data...</p>
+        <p className="text-center text-gray-500">Loading profile data...</p>
       )}
     </main>
   );
@@ -1895,17 +1926,19 @@ function Footer({ onNavigate }) {
 // PrivacyPolicy Component
 function PrivacyPolicy() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="bg-white p-6 rounded-lg shadow-md text-left">
-        <h2 className="text-3xl font-bold mb-4">Privacy Policy</h2>
-        <p className="mb-4">
+    <main className="w-full bg-gray-50 py-12 px-4 overflow-hidden">
+      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">
+          Privacy Policy
+        </h2>
+        <p className="mb-6 text-gray-700 leading-relaxed">
           At HeartHeal, we are committed to protecting your privacy. This
           Privacy Policy outlines how we collect, use, and safeguard your
           personal information when you use our website or services. By using
           HeartHeal, you agree to the practices described in this policy. If you
           do not agree with any part, please discontinue use of our website.
         </p>
-        <p className="mb-4">
+        <p className="mb-6 text-gray-700 leading-relaxed">
           We collect personal information that you provide voluntarily, such as
           your name, email address, and any other details you choose to share.
           We may also gather usage data (e.g., pages visited, time spent) to
@@ -1913,7 +1946,7 @@ function PrivacyPolicy() {
           similar technologies may be used to remember your preferences and
           improve site functionality.
         </p>
-        <p className="mb-4">
+        <p className="mb-6 text-gray-700 leading-relaxed">
           Your information is used to personalize your experience, send relevant
           updates, analyze trends, and improve our services. We do not sell or
           share your data with third parties except as required by law. While we
@@ -1921,7 +1954,7 @@ function PrivacyPolicy() {
           please note that no method of transmission or storage is completely
           secure.
         </p>
-        <p className="mb-4">
+        <p className="text-gray-700 leading-relaxed">
           We may update this Privacy Policy from time to time. Any changes will
           be posted on this page. By continuing to use HeartHeal after any
           modifications, you acknowledge and accept those changes.
@@ -1934,10 +1967,12 @@ function PrivacyPolicy() {
 // TermsOfService Component
 function TermsOfService() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="bg-white p-6 rounded-lg shadow-md text-left">
-        <h2 className="text-3xl font-bold mb-4">Terms of Service</h2>
-        <p className="mb-4">
+    <main className="w-full bg-gray-50 py-12 px-4 overflow-hidden">
+      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">
+          Terms of Service
+        </h2>
+        <p className="mb-6 text-gray-700 leading-relaxed">
           By accessing or using HeartHeal, you agree to be bound by these Terms
           of Service. If you do not agree with any part of these terms, please
           discontinue use of our website immediately. HeartHeal is provided for
@@ -1946,7 +1981,7 @@ function TermsOfService() {
           modify or discontinue any part of our services at any time without
           prior notice.
         </p>
-        <p className="mb-4">
+        <p className="mb-6 text-gray-700 leading-relaxed">
           You are responsible for maintaining the confidentiality of your
           account credentials and for all activities that occur under your
           account. You agree to use our website only for lawful purposes and to
@@ -1955,7 +1990,7 @@ function TermsOfService() {
           any time. Continued use of our website signifies your acceptance of
           any updated terms.
         </p>
-        <p className="mb-4">
+        <p className="text-gray-700 leading-relaxed">
           HeartHeal and its affiliates are not liable for any direct, indirect,
           incidental, or consequential damages arising from your use of our
           website. The content provided is for general informational purposes
@@ -1970,19 +2005,18 @@ function TermsOfService() {
 // ContactUs Component
 function ContactUs() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-3xl font-bold mb-4">Contact Us</h2>
-        <p>
-          If you have any questions or concerns, please feel free to reach out
-          to us at{" "}
+    <main className="w-full bg-gray-50 py-12 px-4 overflow-hidden">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-md text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Contact Us</h2>
+        <p className="text-gray-700 leading-relaxed">
+          If you have any questions or concerns, feel free to reach out to us at{" "}
           <a
             href="mailto:support@heartheal.com"
-            className="text-blue-500 hover:underline"
+            className="text-blue-600 font-medium underline hover:text-blue-800 transition-colors"
           >
             support@heartheal.com
           </a>
-          .
+          . We're here to help you on your healing journey 💙.
         </p>
       </div>
     </main>
