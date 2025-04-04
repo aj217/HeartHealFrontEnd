@@ -1,3 +1,6 @@
+// Base Url
+const base_url = "http://localhost:5000";
+
 // Navbar Component
 function Navbar({ onNavigate }) {
   return (
@@ -179,7 +182,7 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${base_url}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -280,7 +283,7 @@ function SignupPage({ onNavigate }) {
       return;
     }
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch(`${base_url}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -383,14 +386,11 @@ function ForgotPasswordPage({ onNavigate }) {
     setMessage("");
 
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const res = await fetch(`${base_url}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await res.json();
 
@@ -474,7 +474,7 @@ function ResetPasswordPage({ onNavigate }) {
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
+        `${base_url}/api/auth/reset-password/${token}`,
 
         {
           method: "POST",
@@ -572,7 +572,7 @@ function DashboardPage() {
 
   const fetchProgress = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/progress", {
+      const res = await fetch(`${base_url}/api/progress`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -675,7 +675,7 @@ function JournalPage({ onNavigate }) {
   const fetchEntries = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/journal?limit=10", {
+      const res = await fetch(`${base_url}/api/journal?limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -727,7 +727,7 @@ function JournalPage({ onNavigate }) {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/journal", {
+      const res = await fetch(`${base_url}/api/journal`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -842,7 +842,7 @@ function JournalPage({ onNavigate }) {
                   <button
                     onClick={() => {
                       const token = localStorage.getItem("token");
-                      const downloadUrl = `http://localhost:5000/api/journal/download/${entry._id}?token=${token}`;
+                      const downloadUrl = `${base_url}/api/journal/download/${entry._id}?token=${token}`;
                       window.location.href = downloadUrl;
                     }}
                     className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
@@ -856,7 +856,7 @@ function JournalPage({ onNavigate }) {
                     {entry.images.map((imgUrl, index) => (
                       <img
                         key={index}
-                        src={`http://localhost:5000${imgUrl}`}
+                        src={`${base_url}${imgUrl}`}
                         alt={`Journal Image ${index}`}
                         className="w-20 h-20 object-cover rounded border"
                       />
@@ -896,7 +896,7 @@ function MusicQuotePage() {
     setError("");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/music/spotify?mood=${mood}&limit=10`
+        `${base_url}/api/music/spotify?mood=${mood}&limit=10`
       );
       if (!res.ok) throw new Error("Failed to fetch music!");
       const data = await res.json();
@@ -915,7 +915,7 @@ function MusicQuotePage() {
     setQuoteSaved(false);
     setQuoteSaveError("");
     try {
-      const res = await fetch("http://localhost:5000/api/quotes/random");
+      const res = await fetch(`${base_url}/api/quotes/random`);
       if (!res.ok) throw new Error("Quote fetch failed");
       const data = await res.json();
       setQuote(data.quote);
@@ -932,7 +932,7 @@ function MusicQuotePage() {
   const saveQuoteToFavorites = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/quotes/favorite", {
+      const res = await fetch(`${base_url}/api/quotes/favorite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -992,9 +992,7 @@ function MusicQuotePage() {
     setError("");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/music/search?query=${encodeURIComponent(
-          searchTerm
-        )}`,
+        `${base_url}/api/music/search?query=${encodeURIComponent(searchTerm)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1184,7 +1182,7 @@ function UserProfilePage({ onNavigate }) {
   React.useEffect(() => {
     async function fetchProfile() {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/profile", {
+        const response = await fetch(`${base_url}/api/auth/profile`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -1206,7 +1204,7 @@ function UserProfilePage({ onNavigate }) {
 
     async function fetchAchievements() {
       try {
-        const response = await fetch("http://localhost:5000/api/achievements", {
+        const response = await fetch(`${base_url}/api/achievements`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -1225,7 +1223,7 @@ function UserProfilePage({ onNavigate }) {
 
     async function fetchFavoriteQuotes(mood = "all") {
       try {
-        let url = "http://localhost:5000/api/quotes/favorites";
+        let url = `${base_url}/api/quotes/favorites`;
         if (mood !== "all") {
           url += `?mood=${mood}`;
         }
@@ -1252,34 +1250,12 @@ function UserProfilePage({ onNavigate }) {
     }
   }, [token]);
 
-  async function fetchFavoriteQuotes(mood = "all") {
-    try {
-      let url = "http://localhost:5000/api/quotes/favorites";
-      if (mood !== "all") {
-        url += `?mood=${mood}`;
-      }
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error("Failed to load favorite quotes");
-
-      const data = await res.json();
-      setFavoriteQuotes(data || []);
-    } catch (err) {
-      console.error("Error fetching favorite quotes:", err);
-    }
-  }
-
   function deleteFavoriteQuote(quoteId) {
     if (!window.confirm("Are you sure you want to delete this quote?")) return;
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:5000/api/quotes/favorites/${quoteId}`, {
+    fetch(`${base_url}/api/quotes/favorites/${quoteId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1317,7 +1293,7 @@ function UserProfilePage({ onNavigate }) {
             <div className="flex items-center gap-6 flex-wrap">
               {profile?.profilePicture ? (
                 <img
-                  src={`http://localhost:5000/${profile.profilePicture}`}
+                  src={`${base_url}/${profile.profilePicture}`}
                   alt="Profile"
                   className="w-32 h-32 rounded-full object-cover border shadow"
                 />
@@ -1456,7 +1432,7 @@ function UpdateProfilePage({ onNavigate }) {
   React.useEffect(() => {
     async function fetchProfile() {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/profile", {
+        const response = await fetch(`${base_url}/api/auth/profile`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -1499,7 +1475,7 @@ function UpdateProfilePage({ onNavigate }) {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/update", {
+      const response = await fetch(`${base_url}/api/auth/update`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: updateData,
@@ -1626,7 +1602,7 @@ function AchievementsSection() {
 
   const fetchAchievements = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/achievements", {
+      const res = await fetch(`${base_url}/api/achievements`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -1677,7 +1653,7 @@ function MilestoneWidget() {
 
   const fetchMilestones = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/milestones", {
+      const res = await fetch(`${base_url}/api/milestones`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -1733,7 +1709,7 @@ function ChallengeWidget() {
 
   const fetchDailyChallenge = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/challenges/daily", {
+      const res = await fetch(`${base_url}/api/challenges/daily`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch challenge");
@@ -1750,7 +1726,7 @@ function ChallengeWidget() {
 
   const checkIfCompleted = async (challengeId) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/profile", {
+      const res = await fetch(`${base_url}/api/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -1775,7 +1751,7 @@ function ChallengeWidget() {
 
   const handleComplete = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/challenges/complete", {
+      const res = await fetch(`${base_url}/api/challenges/complete`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1841,7 +1817,7 @@ function AffirmationWidget() {
   const fetchAffirmations = async () => {
     try {
       const res = await fetch(
-        "http://localhost:5000/api/affirmations?page=1&limit=60&category=motivational"
+        `${base_url}/api/affirmations?page=1&limit=60&category=motivational`
       );
       const data = await res.json();
       setAffirmations(data.affirmations);
