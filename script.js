@@ -1,5 +1,5 @@
 // Base Url
-const base_url = "http://localhost:5000";
+const base_url = "http://3.10.235.66:5000/";
 
 // Navbar Component
 function Navbar({ onNavigate }) {
