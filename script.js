@@ -1,5 +1,5 @@
 // Base Url
-const base_url = "https://growstrong.duckdns.org";
+const base_url = "http://localhost:5000";
 
 // Navbar Component
 function Navbar({ onNavigate }) {
@@ -37,10 +37,29 @@ function Navbar({ onNavigate }) {
 // UserNavbar Component
 function UserNavbar({ onNavigate, onLogout }) {
   const handleLogoutClick = () => {
-    const confirmed = window.confirm("Are you sure you want to exit?");
-    if (confirmed) {
-      onLogout();
-    }
+    Swal.fire({
+      title: "Are you sure you want to exit?",
+      text: "You will be logged out from your session.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, logout",
+      background: "#f0f4ff",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onLogout();
+
+        Toastify({
+          text: "👋 Logged out successfully!",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#60a5fa",
+        }).showToast();
+      }
+    });
   };
 
   return (
@@ -191,7 +210,14 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
       if (response.ok && data.token) {
         console.log("Login successful:", data);
         localStorage.setItem("token", data.token);
-        alert("Login successful!");
+        Toastify({
+          text: "🎉 Login successful!",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#4ade80",
+        }).showToast();
         onAuthSuccess();
         onNavigate("dashboard");
       } else {
@@ -276,21 +302,30 @@ function SignupPage({ onNavigate }) {
     e.preventDefault();
     setError("");
     setMessage("");
+
     if (!validatePassword(password)) {
       setError(
         "Password must be at least 8 characters long, include a number and a special character."
       );
       return;
     }
+
     try {
       const response = await fetch(`${base_url}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
         setMessage("User registered successfully!");
+
+        // Redirect to login after short delay
+        setTimeout(() => {
+          onNavigate("login");
+        }, 1000); // Delay for user to see the message
       } else {
         if (data.message && data.message.toLowerCase().includes("exists")) {
           setMessage("User already registered!");
@@ -484,10 +519,16 @@ function ResetPasswordPage({ onNavigate }) {
       );
       const data = await response.json();
       if (response.ok) {
-        alert(
-          "Password reset successful! Please log in with your new password."
-        );
-        onNavigate("login");
+        Toastify({
+          text: "🔒 Password reset successful! Please log in.",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#4ade80",
+        }).showToast();
+
+        setTimeout(() => onNavigate("login"), 1000);
       } else {
         setError(data.message || "Password reset failed. Please try again.");
       }
@@ -680,7 +721,14 @@ function JournalPage({ onNavigate }) {
       });
 
       if (res.status === 401) {
-        alert("Session expired. Please log in again.");
+        Toastify({
+          text: "⚠️ Session expired. Please log in again.",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#f97316",
+        }).showToast();
         localStorage.removeItem("token");
         onNavigate("login");
         return;
@@ -690,6 +738,14 @@ function JournalPage({ onNavigate }) {
       setEntries(data.journals || []);
     } catch (err) {
       console.error("Failed to load entries", err);
+      Toastify({
+        text: "❌ Could not load journal entries.",
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#ef4444",
+      }).showToast();
     }
   };
 
@@ -715,7 +771,14 @@ function JournalPage({ onNavigate }) {
     const plainText = tempDiv.textContent.trim();
 
     if (!plainText) {
-      alert("Your journal is empty. Please fill it before submitting.");
+      Toastify({
+        text: "✏️ Your journal is empty. Please write something.",
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#facc15",
+      }).showToast();
       return;
     }
 
@@ -736,7 +799,14 @@ function JournalPage({ onNavigate }) {
       });
 
       if (res.status === 401) {
-        alert("Session expired. Please log in again.");
+        Toastify({
+          text: "⚠️ Session expired. Please log in again.",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#f97316",
+        }).showToast();
         localStorage.removeItem("token");
         onNavigate("login");
         return;
@@ -744,7 +814,14 @@ function JournalPage({ onNavigate }) {
 
       if (res.ok) {
         const data = await res.json();
-        alert("Journal entry saved!");
+        Toastify({
+          text: "📓 Journal entry saved!",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#4ade80",
+        }).showToast();
 
         if (data.unlockedMilestones && data.unlockedMilestones.length > 0) {
           data.unlockedMilestones.forEach((m) => {
@@ -764,11 +841,26 @@ function JournalPage({ onNavigate }) {
         } catch (jsonErr) {
           console.warn("Failed to parse error JSON", jsonErr);
         }
-        alert(message);
+
+        Toastify({
+          text: `❌ ${message}`,
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#ef4444",
+        }).showToast();
       }
     } catch (err) {
       console.error("Submit error:", err);
-      alert("Something went wrong while saving your journal.");
+      Toastify({
+        text: "❌ Something went wrong while saving your journal.",
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#ef4444",
+      }).showToast();
     }
   };
 
@@ -1251,25 +1343,52 @@ function UserProfilePage({ onNavigate }) {
   }, [token]);
 
   function deleteFavoriteQuote(quoteId) {
-    if (!window.confirm("Are you sure you want to delete this quote?")) return;
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This quote will be deleted from your favorites.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token");
+        fetch(`${base_url}/api/quotes/favorites/${quoteId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Delete failed");
 
-    fetch(`${base_url}/api/quotes/favorites/${quoteId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Delete failed");
-        // Update UI to remove deleted quote
-        setFavoriteQuotes((prev) => prev.filter((q) => q._id !== quoteId));
-      })
-      .catch((err) => {
-        console.error("Error deleting quote:", err);
-        alert("Something went wrong while deleting the quote.");
-      });
+            // Remove the quote from the list in UI
+            setFavoriteQuotes((prev) => prev.filter((q) => q._id !== quoteId));
+
+            Toastify({
+              text: "🗑️ Quote deleted successfully!",
+              duration: 3000,
+              close: true,
+              gravity: "top",
+              position: "right",
+              backgroundColor: "#f87171",
+            }).showToast();
+          })
+          .catch((err) => {
+            console.error("Error deleting quote:", err);
+            Toastify({
+              text: "Something went wrong while deleting the quote.",
+              duration: 3000,
+              close: true,
+              gravity: "top",
+              position: "right",
+              backgroundColor: "#ef4444",
+            }).showToast();
+          });
+      }
+    });
   }
 
   return (
@@ -2025,18 +2144,22 @@ function App() {
   const initialPage = queryParams.get("page") || "home";
 
   const [page, setPage] = React.useState(initialPage);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(
-    !!localStorage.getItem("token") //  Check if token exists
-  );
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  // Wrapper to update both state and URL
+  React.useEffect(() => {
+    // Check token once on load
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+    setIsLoading(false);
+  }, []);
+
   const handleNavigate = (newPage) => {
     setPage(newPage);
     const newUrl = `${window.location.pathname}?page=${newPage}`;
     window.history.pushState({}, "", newUrl);
   };
 
-  // Listen to back/forward button events
   React.useEffect(() => {
     const handlePopState = () => {
       const queryParams = new URLSearchParams(window.location.search);
@@ -2050,7 +2173,7 @@ function App() {
 
   const handleAuthSuccess = () => {
     setIsAuthenticated(true);
-    localStorage.setItem("authenticated", "true"); 
+    localStorage.setItem("authenticated", "true");
   };
 
   const handleLogout = () => {
@@ -2080,31 +2203,46 @@ function App() {
         return isAuthenticated ? (
           <DashboardPage />
         ) : (
-          <LandingPage onNavigate={handleNavigate} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "journal":
         return isAuthenticated ? (
           <JournalPage onNavigate={handleNavigate} />
         ) : (
-          <LandingPage onNavigate={handleNavigate} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "musicquote":
         return isAuthenticated ? (
           <MusicQuotePage />
         ) : (
-          <LandingPage onNavigate={handleNavigate} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "profile":
         return isAuthenticated ? (
           <UserProfilePage onNavigate={handleNavigate} />
         ) : (
-          <LandingPage onNavigate={handleNavigate} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "updateProfile":
         return isAuthenticated ? (
           <UpdateProfilePage onNavigate={handleNavigate} />
         ) : (
-          <LandingPage onNavigate={handleNavigate} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "privacy":
         return <PrivacyPolicy />;
@@ -2116,6 +2254,8 @@ function App() {
         return <LandingPage onNavigate={handleNavigate} />;
     }
   };
+
+  if (isLoading) return <div className="p-10 text-center">Loading...</div>; // Prevent flicker
 
   return (
     <ErrorBoundary>
