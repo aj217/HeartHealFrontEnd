@@ -2024,7 +2024,9 @@ function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const initialPage = queryParams.get("page") || "home";
   const [page, setPage] = React.useState(initialPage);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(
+    localStorage.getItem("token") ? true : false
+  );
 
   const handleAuthSuccess = () => {
     setIsAuthenticated(true);
@@ -2033,6 +2035,7 @@ function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPage("login");
+    localStorage.clear();
   };
 
   const renderPage = () => {
