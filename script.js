@@ -1,5 +1,5 @@
 // Base Url
-const base_url = "http://localhost:5000";
+const base_url = "https://growstrong.duckdns.org";
 
 // Navbar Component
 function Navbar({ onNavigate }) {
