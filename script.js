@@ -2023,8 +2023,11 @@ class ErrorBoundary extends React.Component {
 function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const initialPage = queryParams.get("page") || "home";
+
   const [page, setPage] = React.useState(initialPage);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(
+    !!localStorage.getItem("token") //  Check if token exists
+  );
 
   // Wrapper to update both state and URL
   const handleNavigate = (newPage) => {
@@ -2047,6 +2050,7 @@ function App() {
 
   const handleAuthSuccess = () => {
     setIsAuthenticated(true);
+    localStorage.setItem("authenticated", "true"); 
   };
 
   const handleLogout = () => {
@@ -2073,15 +2077,35 @@ function App() {
       case "reset":
         return <ResetPasswordPage onNavigate={handleNavigate} />;
       case "dashboard":
-        return <DashboardPage />;
+        return isAuthenticated ? (
+          <DashboardPage />
+        ) : (
+          <LandingPage onNavigate={handleNavigate} />
+        );
       case "journal":
-        return <JournalPage onNavigate={handleNavigate} />;
+        return isAuthenticated ? (
+          <JournalPage onNavigate={handleNavigate} />
+        ) : (
+          <LandingPage onNavigate={handleNavigate} />
+        );
       case "musicquote":
-        return <MusicQuotePage />;
+        return isAuthenticated ? (
+          <MusicQuotePage />
+        ) : (
+          <LandingPage onNavigate={handleNavigate} />
+        );
       case "profile":
-        return <UserProfilePage onNavigate={handleNavigate} />;
+        return isAuthenticated ? (
+          <UserProfilePage onNavigate={handleNavigate} />
+        ) : (
+          <LandingPage onNavigate={handleNavigate} />
+        );
       case "updateProfile":
-        return <UpdateProfilePage onNavigate={handleNavigate} />;
+        return isAuthenticated ? (
+          <UpdateProfilePage onNavigate={handleNavigate} />
+        ) : (
+          <LandingPage onNavigate={handleNavigate} />
+        );
       case "privacy":
         return <PrivacyPolicy />;
       case "terms":
