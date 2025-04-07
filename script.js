@@ -2026,40 +2026,62 @@ function App() {
   const [page, setPage] = React.useState(initialPage);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
+  // Wrapper to update both state and URL
+  const handleNavigate = (newPage) => {
+    setPage(newPage);
+    const newUrl = `${window.location.pathname}?page=${newPage}`;
+    window.history.pushState({}, "", newUrl);
+  };
+
+  // Listen to back/forward button events
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const queryParams = new URLSearchParams(window.location.search);
+      const currentPage = queryParams.get("page") || "home";
+      setPage(currentPage);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const handleAuthSuccess = () => {
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setPage("login");
     localStorage.clear();
+    handleNavigate("login");
   };
 
   const renderPage = () => {
     switch (page) {
       case "home":
-        return <LandingPage onNavigate={setPage} />;
+        return <LandingPage onNavigate={handleNavigate} />;
       case "login":
         return (
-          <LoginPage onNavigate={setPage} onAuthSuccess={handleAuthSuccess} />
+          <LoginPage
+            onNavigate={handleNavigate}
+            onAuthSuccess={handleAuthSuccess}
+          />
         );
       case "signup":
-        return <SignupPage onNavigate={setPage} />;
+        return <SignupPage onNavigate={handleNavigate} />;
       case "forgot":
-        return <ForgotPasswordPage onNavigate={setPage} />;
+        return <ForgotPasswordPage onNavigate={handleNavigate} />;
       case "reset":
-        return <ResetPasswordPage onNavigate={setPage} />;
+        return <ResetPasswordPage onNavigate={handleNavigate} />;
       case "dashboard":
         return <DashboardPage />;
       case "journal":
-        return <JournalPage />;
+        return <JournalPage onNavigate={handleNavigate} />;
       case "musicquote":
         return <MusicQuotePage />;
       case "profile":
-        return <UserProfilePage onNavigate={setPage} />;
+        return <UserProfilePage onNavigate={handleNavigate} />;
       case "updateProfile":
-        return <UpdateProfilePage onNavigate={setPage} />;
+        return <UpdateProfilePage onNavigate={handleNavigate} />;
       case "privacy":
         return <PrivacyPolicy />;
       case "terms":
@@ -2067,7 +2089,7 @@ function App() {
       case "contact":
         return <ContactUs />;
       default:
-        return <LandingPage onNavigate={setPage} />;
+        return <LandingPage onNavigate={handleNavigate} />;
     }
   };
 
@@ -2075,12 +2097,12 @@ function App() {
     <ErrorBoundary>
       <div className="flex flex-col min-h-screen">
         {isAuthenticated ? (
-          <UserNavbar onNavigate={setPage} onLogout={handleLogout} />
+          <UserNavbar onNavigate={handleNavigate} onLogout={handleLogout} />
         ) : (
-          <Navbar onNavigate={setPage} />
+          <Navbar onNavigate={handleNavigate} />
         )}
         <div className="flex-grow">{renderPage()}</div>
-        {page === "home" && <Footer onNavigate={setPage} />}
+        {page === "home" && <Footer onNavigate={handleNavigate} />}
       </div>
     </ErrorBoundary>
   );
