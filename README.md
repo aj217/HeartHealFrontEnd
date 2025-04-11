@@ -50,7 +50,7 @@ frontend
 
 1. Clone the repo:
 
-   git clone https://github.com/your-username/Heart-Heal-fn.git
+   git clone https://github.com/aj217/HeartHealFrontEnd.git
 
 2. Open the folder in VS Code or any IDE.
 
