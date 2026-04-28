@@ -1,5 +1,5 @@
 // Base Url
-const base_url = "https://heart-heal-front-end.vercel.app/";
+const base_url = "https://hearthealbackend.onrender.com";
 
 // Navbar Component
 function Navbar({ onNavigate }) {
