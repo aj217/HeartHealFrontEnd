@@ -1,83 +1,70 @@
- # HeartHeal Frontend 💖
+HeartHeal Frontend 💖
+A mental wellness web application built with React, helping users heal emotionally through journaling, music, daily quotes, and gamification.
+🌐 Live Demo
 
-This is the frontend part of the HeartHeal web platform – a gamified app built to support post-breakup healing and emotional recovery. The application offers features like journaling, motivational affirmations, music, and milestone tracking, all with an interactive UI to encourage positivity and progress.
+Frontend: https://heart-heal-front-end.vercel.app
+Backend: https://hearthealbackend.onrender.com
 
----
 
-## Live Link
+✨ Features
 
-https://aj217.github.io/HeartHealFrontEnd/
+📝 Daily Journaling — Write and track emotional journal entries with mood tagging and image uploads
+🎵 Music & Quotes — Mood-based music recommendations and daily inspirational quotes
+📊 Healing Dashboard — Visualize mood stats, streaks, and journal counts with charts
+🏆 Gamification — Earn XP, level up, unlock achievements and milestones
+🎯 Daily Challenges — Complete wellness challenges to earn XP
+💬 Daily Affirmations — Auto-refreshing motivational affirmations every 10 seconds
+👤 User Profile — View and update profile, achievements, and favourite quotes
+🔐 Authentication — Secure signup, login, forgot password, and reset password
 
----
 
-## Features
+🛠 Tech Stack
 
-- Clean and responsive UI using React and Tailwind CSS
-- Daily motivational affirmations (auto-refresh every 10 seconds)
-- Journal page with mood selection and Quill rich text editor
-- Media uploads (images) supported via backend
-- Mood-based music recommendations + Spotify search
-- Daily challenges with XP and badge system
-- User profile with XP, progress tracking, and quote history
-- Save favorite quotes and you can delete it too
+React (via CDN, in-browser Babel)
+Tailwind CSS (via CDN)
+Chart.js — Mood tracker bar chart
+Quill.js — Rich text editor for journal entries
+Toastify — Toast notifications
+SweetAlert2 — Confirmation dialogs
+Howler.js — Music preview playback
 
----
 
-## Tech Stack
-
-- React (via CDN)
-- Tailwind CSS
-- Quill.js for text editing
-- Toastify for toast notifications
-- SweetAleart2 for aleart messages
-- Axios for API integration
-- GitHub Pages for deployment
-
----
-
-## Project Structure
-
-frontend
+📁 Folder Structure
+HeartHealFrontEnd/
 │
-├── index.html           --> Main HTML file, includes React and Babel
-├── script.js            --> React components using JSX (via Babel)
-├── style.css            --> Custom styles with Tailwind
-└── favicon.ico          --> Favicon icon
+├── index.html        → Main HTML entry point
+├── script.js         → All React components and app logic
+├── style.css         → Custom styles
+└── README.md         → Project documentation
 
----
+🚀 Getting Started
 
-## Running Locally
+Clone the repository:
 
-1. Clone the repo:
+bashgit clone https://github.com/aj217/HeartHealFrontEnd.git
 
-   git clone https://github.com/aj217/HeartHealFrontEnd.git
+Open index.html in your browser or use Live Server in VS Code
+Make sure base_url in script.js points to the backend:
 
-2. Open the folder in VS Code or any IDE.
+jsconst base_url = "https://hearthealbackend.onrender.com";
 
-3. Launch `index.html` using Live Server or directly in browser.
+🔗 Backend
+👉 https://github.com/aj217/HeartHealBackEnd
+Built with Node.js, Express, and MongoDB — handles auth, journals, music, quotes, challenges, and achievements.
 
-4. Also run it locally using http-server -p 5500
+🌍 Deployment
+ServicePlatformFrontendVercelBackendRenderDatabaseMongoDB Atlas
 
-> No extra setup needed since it's built with CDN-based React and Tailwind.
+🔐 Authentication
 
----
+Passwords must be 8+ characters with at least 1 number and 1 special character
+JWT tokens stored in localStorage
 
-## API Integration
 
-Backend is running and update API base URL inside `script.js`:
+👤 Contributors
 
-- const BASE_URL = 'https://growstrong.duckdns.org/';
-- To run it locally change the BASE_URL to http://localhost:5000
+aj217 — Full Stack Developer
 
----
 
-## Deployment
-
-The frontend is deployed via GitHub Pages. It works seamlessly with the HTTPS-secured backend hosted on AWS EC2.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
+📄 License
+MIT License
